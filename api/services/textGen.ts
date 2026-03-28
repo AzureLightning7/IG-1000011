@@ -65,40 +65,92 @@ const parseJsonFromModelContent = (content: unknown) => {
       repaired = repaired.replace(/,\s*}/g, '}');
       repaired = repaired.replace(/,\s*]/g, ']');
       
-      const lastBrace = repaired.lastIndexOf('}');
-      const lastBracket = repaired.lastIndexOf(']');
-      const lastValidEnd = Math.max(lastBrace, lastBracket);
+      const fixUnescapedQuotes = (str: string): string => {
+        let result = '';
+        let inString = false;
+        let escapeNext = false;
+        
+        for (let i = 0; i < str.length; i++) {
+          const char = str[i];
+          
+          if (escapeNext) {
+            result += char;
+            escapeNext = false;
+            continue;
+          }
+          
+          if (char === '\\') {
+            result += char;
+            escapeNext = true;
+            continue;
+          }
+          
+          if (char === '"') {
+            if (inString) {
+              const nextChar = str[i + 1];
+              if (nextChar && !['}', ']', ',', ':'].includes(nextChar)) {
+                result += '\\"';
+              } else {
+                result += char;
+                inString = false;
+              }
+            } else {
+              const prevChar = str[i - 1];
+              if (prevChar && !['{', '}', ',', '[', ']', ':'].includes(prevChar)) {
+                result += '\\"';
+              } else {
+                result += char;
+                inString = true;
+              }
+            }
+          } else {
+            result += char;
+          }
+        }
+        
+        return result;
+      };
       
-      if (lastValidEnd > 0) {
-        let truncated = repaired.slice(0, lastValidEnd + 1);
+      repaired = fixUnescapedQuotes(repaired);
+      
+      try {
+        return JSON.parse(repaired);
+      } catch {
+        const lastBrace = repaired.lastIndexOf('}');
+        const lastBracket = repaired.lastIndexOf(']');
+        const lastValidEnd = Math.max(lastBrace, lastBracket);
         
-        let openBraces = 0;
-        let openBrackets = 0;
-        for (const char of truncated) {
-          if (char === '{') openBraces++;
-          if (char === '}') openBraces--;
-          if (char === '[') openBrackets++;
-          if (char === ']') openBrackets--;
+        if (lastValidEnd > 0) {
+          let truncated = repaired.slice(0, lastValidEnd + 1);
+          
+          let openBraces = 0;
+          let openBrackets = 0;
+          for (const char of truncated) {
+            if (char === '{') openBraces++;
+            if (char === '}') openBraces--;
+            if (char === '[') openBrackets++;
+            if (char === ']') openBrackets--;
+          }
+          
+          while (openBrackets > 0) {
+            truncated += ']';
+            openBrackets--;
+          }
+          while (openBraces > 0) {
+            truncated += '}';
+            openBraces--;
+          }
+          
+          try {
+            return JSON.parse(truncated);
+          } catch {
+            // Continue to throw original error
+          }
         }
         
-        while (openBrackets > 0) {
-          truncated += ']';
-          openBrackets--;
-        }
-        while (openBraces > 0) {
-          truncated += '}';
-          openBraces--;
-        }
-        
-        try {
-          return JSON.parse(truncated);
-        } catch {
-          // Continue to throw original error
-        }
+        console.error('JSON repair failed. Content around error position:', repaired.slice(Math.max(0, 2200), 2300));
+        throw originalError;
       }
-      
-      console.error('JSON repair failed. Content around error position:', repaired.slice(Math.max(0, 2200), 2300));
-      throw originalError;
     }
   };
 

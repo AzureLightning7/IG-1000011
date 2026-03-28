@@ -11,7 +11,7 @@ export const customizeImage = async (
 ): Promise<string> => {
   const client = minimaxClient();
   
-  const enhancedPrompt = `${basePrompt}\n\nCustomization request: ${customizationPrompt}\n\nIMPORTANT: Preserve the original room layout, furniture placement, and overall style while implementing the specific customization request.`;
+  const enhancedPrompt = `${basePrompt}\n\nCustomization request: ${customizationPrompt}\n\nIMPORTANT: The original image is of a room. Preserve the original room layout, furniture placement, and overall style while implementing the specific customization request. Your output image must be at least 90% similar to the original image.`;
 
   const response = await client.post(
     '/image_generation',
