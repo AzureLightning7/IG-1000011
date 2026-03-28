@@ -9,13 +9,17 @@ import ShoppingList from '../components/ShoppingList';
 
 const ResultsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { generatedContent, mediaContent, reset } = useStore();
+  const { generatedContent, mediaContent, setMediaContent, reset } = useStore();
 
   useEffect(() => {
     if (!generatedContent) {
       navigate('/');
     }
   }, [generatedContent, navigate]);
+
+  const handleAudioGenerated = (audioUrl: string) => {
+    setMediaContent({ audioUrl });
+  };
 
   if (!generatedContent) return null;
 
@@ -67,7 +71,12 @@ const ResultsPage: React.FC = () => {
           
           <section>
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">🎧 Audio Guide</h2>
-            <AudioPlayer audioUrl={mediaContent.audioUrl} label="Walkthrough Script" />
+            <AudioPlayer 
+              audioUrl={mediaContent.audioUrl} 
+              label="Walkthrough Script" 
+              narrationScript={generatedContent.narrationScript}
+              onAudioGenerated={handleAudioGenerated}
+            />
           </section>
         </div>
 

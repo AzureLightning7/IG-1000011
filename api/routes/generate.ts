@@ -1,7 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { generateText } from '../services/textGen.js';
 import { generateImage } from '../services/imageGen.js';
-import { generateTTS } from '../services/tts.js';
 import { QuizData } from '../../shared/types.js';
 import crypto from 'crypto';
 
@@ -28,7 +27,7 @@ router.post('/', async (req: Request, res: Response) => {
     const content = await generateText(quizData);
     sendUpdate('Text Generation', 'completed', content);
 
-    // Step 2: Parallel Generation (Image, TTS, Music)
+    // Step 2: Image Generation only (TTS will be generated on demand)
     sendUpdate('Asset Generation', 'processing');
 
     const imagePromise = generateImage(content.imagePrompt, sessionId)
@@ -42,26 +41,14 @@ router.post('/', async (req: Request, res: Response) => {
         return null;
       });
 
-    const ttsPromise = generateTTS(content.narrationScript, sessionId)
-      .then((url) => {
-        sendUpdate('TTS Generation', 'completed', { url });
-        return url;
-      })
-      .catch((err) => {
-        console.error('TTS gen failed:', err);
-        sendUpdate('TTS Generation', 'error', { message: err instanceof Error ? err.message : 'TTS generation failed' });
-        return null;
-      });
+    // Wait for image generation only
+    const imageUrl = await imagePromise;
 
-    // Wait for the essential assets (Image, TTS)
-    const [imageUrl, audioUrl] = await Promise.all([imagePromise, ttsPromise]);
-
-    // Send final complete data (video might still be null)
+    // Send final complete data without audioUrl
     sendUpdate('Complete', 'completed', {
       ...content,
       media: {
         imageUrl,
-        audioUrl,
       },
     });
 
