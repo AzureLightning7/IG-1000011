@@ -88,7 +88,7 @@ If you can't identify a product, omit it from the results.
     const jsonMatch = aiContent.match(/```json[\s\S]*?```/);
     const jsonString = jsonMatch ? jsonMatch[0].replace(/```json|```/g, '') : aiContent;
 
-    let parsedResponse: IdentifyProductsResponse;
+    let parsedResponse: unknown;
     
     try {
       parsedResponse = JSON.parse(jsonString);
@@ -96,14 +96,55 @@ If you can't identify a product, omit it from the results.
       throw new Error('Invalid JSON response from AI');
     }
 
-    // Validate and filter results
-    const validProducts = (parsedResponse.products || []).filter((product) => {
+    // Schema validation function
+    const isValidProduct = (product: unknown): product is IdentifiedProduct => {
+      if (!product || typeof product !== 'object') return false;
+      const p = product as Record<string, unknown>;
+      
+      // Check required fields exist and have correct types
+      if (typeof p.name !== 'string') return false;
+      if (typeof p.category !== 'string') return false;
+      if (typeof p.priceRange !== 'string') return false;
+      if (typeof p.searchQuery !== 'string') return false;
+      if (typeof p.confidence !== 'number') return false;
+      if (typeof p.description !== 'string') return false;
+      
+      // Validate position object
+      if (!p.position || typeof p.position !== 'object') return false;
+      const pos = p.position as Record<string, unknown>;
+      if (typeof pos.x !== 'number' || typeof pos.y !== 'number') return false;
+      
+      // Validate size object
+      if (!p.size || typeof p.size !== 'object') return false;
+      const size = p.size as Record<string, unknown>;
+      if (typeof size.width !== 'number' || typeof size.height !== 'number') return false;
+      
+      return true;
+    };
+
+    const isValidResponse = (response: unknown): response is IdentifyProductsResponse => {
+      if (!response || typeof response !== 'object') return false;
+      const r = response as Record<string, unknown>;
+      
+      // Validate products array
+      if (!Array.isArray(r.products)) return false;
+      
+      // Validate optional fields if present
+      if (r.roomType !== undefined && typeof r.roomType !== 'string') return false;
+      if (r.style !== undefined && typeof r.style !== 'string') return false;
+      
+      return true;
+    };
+
+    // Validate the overall response structure
+    if (!isValidResponse(parsedResponse)) {
+      throw new Error('Invalid response schema from AI');
+    }
+
+    // Filter valid products with additional business logic validation
+    const validProducts = parsedResponse.products.filter((product) => {
       return (
-        product.position?.x !== undefined &&
-        product.position?.y !== undefined &&
-        product.size?.width !== undefined &&
-        product.size?.height !== undefined &&
-        product.confidence !== undefined &&
+        isValidProduct(product) &&
         product.confidence > 50 &&
         product.position.x >= 0 &&
         product.position.x <= 100 &&

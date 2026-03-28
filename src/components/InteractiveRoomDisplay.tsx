@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { Product, IdentifiedProduct } from '../../shared/types';
@@ -45,36 +45,49 @@ const InteractiveRoomDisplay: React.FC<InteractiveRoomDisplayProps> = ({
   useEffect(() => {
     if (lockedTilt) return;
 
-    const rotateSlide = (mousepos: { x: number; y: number }) => {
-      if (!sceneRef.current || slideSizes.width === 0 || slideSizes.height === 0) return;
-
-      const movement = { rotateX: 5, rotateY: 10 };
-      const rotX = 2 * movement.rotateX / slideSizes.height * mousepos.y - movement.rotateX;
-      const rotY = 2 * movement.rotateY / slideSizes.width * mousepos.x - movement.rotateY;
-      
-      sceneRef.current.style.transform = 
-        `rotate3d(1,0,0,${rotX}deg) rotate3d(0,1,0,${rotY}deg)`;
-    };
+    let rafId: number | null = null;
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (!sceneRef.current) return;
+      if (!sceneRef.current || slideSizes.width === 0 || slideSizes.height === 0) return;
 
-      const mousepos = {
-        x: e.clientX,
-        y: e.clientY
-      };
+      // Cancel any pending frame
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
 
-      rotateSlide(mousepos);
+      // Schedule update on next animation frame for smooth 60fps
+      rafId = requestAnimationFrame(() => {
+        if (!sceneRef.current) return;
+
+        // Calculate relative mouse position within the container
+        const rect = sceneRef.current.getBoundingClientRect();
+        const mousepos = {
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top
+        };
+
+        const movement = { rotateX: 5, rotateY: 10 };
+        const rotX = 2 * movement.rotateX / slideSizes.height * mousepos.y - movement.rotateX;
+        const rotY = 2 * movement.rotateY / slideSizes.width * mousepos.x - movement.rotateY;
+        
+        sceneRef.current.style.transform = 
+          `rotate3d(1,0,0,${rotX}deg) rotate3d(0,1,0,${rotY}deg)`;
+      });
     };
 
     window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
+    };
   }, [lockedTilt, slideSizes]);
 
 
 
   // Fallback grid positioning
-  const getFallbackPositions = (): IdentifiedProduct[] => {
+  const getFallbackPositions = useCallback((): IdentifiedProduct[] => {
     const positions = [
       { x: 20, y: 25 },
       { x: 45, y: 25 },
@@ -94,7 +107,7 @@ const InteractiveRoomDisplay: React.FC<InteractiveRoomDisplayProps> = ({
       confidence: 100,
       description: product.name
     }));
-  };
+  }, [products]);
 
   // Identify products using AI
   useEffect(() => {
@@ -185,6 +198,15 @@ const InteractiveRoomDisplay: React.FC<InteractiveRoomDisplayProps> = ({
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: index * 0.1 }}
                 onClick={() => handleItemClick(product)}
+                role="button"
+                tabIndex={0}
+                aria-label={`View details for ${product.name}`}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleItemClick(product);
+                  }
+                }}
               >
                 <div className="product-marker">
                   <span className="product-name">{product.name}</span>
