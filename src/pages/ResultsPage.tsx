@@ -1,21 +1,54 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { motion } from 'framer-motion';
-import { RefreshCw, Download, Share2 } from 'lucide-react';
+import { RefreshCw, Download, Share2, Loader2, Copy, Check } from 'lucide-react';
 import MoodBoard from '../components/MoodBoard';
 import AudioPlayer from '../components/AudioPlayer';
 import ShoppingList from '../components/ShoppingList';
+import { toast } from 'sonner';
 
 const ResultsPage: React.FC = () => {
   const navigate = useNavigate();
   const { generatedContent, mediaContent, reset } = useStore();
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
 
   useEffect(() => {
     if (!generatedContent) {
       navigate('/');
     }
   }, [generatedContent, navigate]);
+
+  const handleShare = async () => {
+    setIsSharing(true);
+    
+    try {
+      const shareData = {
+        title: `My DormVibe: ${generatedContent?.vibeName}`,
+        text: `Check out my custom dorm room vibe: ${generatedContent?.vibeName}! ${generatedContent?.description}`,
+      };
+
+      if (navigator.share && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+        toast.success('Shared successfully!');
+      } else {
+        const shareUrl = `${window.location.origin}?vibe=${encodeURIComponent(generatedContent?.vibeName || '')}`;
+        await navigator.clipboard.writeText(shareUrl);
+        setShareCopied(true);
+        toast.success('Link copied to clipboard!');
+        setTimeout(() => setShareCopied(false), 2000);
+      }
+    } catch (error) {
+      const shareUrl = `${window.location.origin}?vibe=${encodeURIComponent(generatedContent?.vibeName || '')}`;
+      await navigator.clipboard.writeText(shareUrl);
+      setShareCopied(true);
+      toast.success('Link copied to clipboard!');
+      setTimeout(() => setShareCopied(false), 2000);
+    } finally {
+      setIsSharing(false);
+    }
+  };
 
   if (!generatedContent) return null;
 
@@ -90,8 +123,13 @@ const ResultsPage: React.FC = () => {
           >
             <RefreshCw className="w-5 h-5" /> Start Over
           </button>
-          <button className="flex items-center gap-2 px-8 py-4 bg-teal-500 text-black rounded-2xl hover:bg-teal-400 transition-all font-bold shadow-[0_0_30px_rgba(45,212,191,0.2)]">
-            <Share2 className="w-5 h-5" /> Share My Vibe
+          <button 
+            onClick={handleShare}
+            disabled={isSharing}
+            className="flex items-center gap-2 px-8 py-4 bg-teal-500 text-black rounded-2xl hover:bg-teal-400 transition-all font-bold shadow-[0_0_30px_rgba(45,212,191,0.2)] disabled:opacity-50"
+          >
+            {isSharing ? <Loader2 className="w-5 h-5 animate-spin" /> : shareCopied ? <Check className="w-5 h-5" /> : <Share2 className="w-5 h-5" />}
+            {shareCopied ? 'Link Copied!' : 'Share My Vibe'}
           </button>
         </div>
       </main>
