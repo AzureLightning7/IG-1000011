@@ -8,9 +8,8 @@ import path from 'path';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 
-import authRoutes from './routes/auth.js';
-import generateRoutes from './routes/generate.js';
-import generateTTSRoutes from './routes/generateTTS.js';
+import generateRoutes from './routes/generate.ts';
+import generateTTSRoutes from './routes/generateTTS.ts';
 
 dotenv.config();
 
@@ -33,7 +32,6 @@ app.get('/api/health', (_req: Request, res: Response) => {
   res.status(200).json({ ok: true });
 });
 
-app.use('/api/auth', authRoutes);
 app.use('/api/generate', generateRoutes);
 app.use('/api/generate-tts', generateTTSRoutes);
 

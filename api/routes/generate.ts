@@ -28,7 +28,7 @@ router.post('/', async (req: Request, res: Response) => {
     sendUpdate('Text Generation', 'completed', content);
 
     // Step 2: Image Generation only (TTS will be generated on demand)
-    sendUpdate('Asset Generation', 'processing');
+    sendUpdate('Image Generation', 'processing');
 
     const imagePromise = generateImage(content.imagePrompt, sessionId)
       .then((url) => {

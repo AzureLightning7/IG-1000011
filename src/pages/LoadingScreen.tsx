@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,6 +8,16 @@ const LoadingScreen: React.FC = () => {
   const navigate = useNavigate();
   const { quizData, setGeneratedContent, setMediaContent, setProgress, progress, setIsGenerating } = useStore();
   const eventSourceRef = useRef<EventSource | null>(null);
+  const [stopwatches, setStopwatches] = useState<{
+    [key: string]: {
+      startTime: number | null;
+      elapsedTime: number;
+    };
+  }>({
+    'Text Generation': { startTime: null, elapsedTime: 0 },
+    'Image Generation': { startTime: null, elapsedTime: 0 },
+  });
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!quizData) {
@@ -66,13 +76,33 @@ const LoadingScreen: React.FC = () => {
 
         if (nonCriticalSteps.has(step)) {
           setProgress(step, 'completed', `${step} failed — continuing. (${message})`);
+          setStopwatches(prev => ({
+            ...prev,
+            [step]: { ...prev[step], startTime: null }
+          }));
         } else {
           setProgress(step, 'error', message);
+          setStopwatches(prev => ({
+            ...prev,
+            [step]: { ...prev[step], startTime: null }
+          }));
         }
         return;
       }
 
       setProgress(step, status);
+
+      if (status === 'processing') {
+        setStopwatches(prev => ({
+          ...prev,
+          [step]: { startTime: Date.now(), elapsedTime: 0 }
+        }));
+      } else if (status === 'completed') {
+        setStopwatches(prev => ({
+          ...prev,
+          [step]: { ...prev[step], startTime: null }
+        }));
+      }
 
       if (step === 'Text Generation' && status === 'completed') {
         setGeneratedContent(data);
@@ -96,10 +126,43 @@ const LoadingScreen: React.FC = () => {
     };
   }, [quizData, navigate, setGeneratedContent, setMediaContent, setProgress, setIsGenerating]);
 
+  // Update stopwatches every second
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout | null = null;
+    
+    const updateStopwatches = () => {
+      setStopwatches(prev => {
+        const newStopwatches = { ...prev };
+        Object.entries(prev).forEach(([step, { startTime, elapsedTime }]) => {
+          if (startTime) {
+            newStopwatches[step] = {
+              startTime,
+              elapsedTime: Math.floor((Date.now() - startTime) / 1000)
+            };
+          }
+        });
+        return newStopwatches;
+      });
+    };
+
+    intervalId = setInterval(updateStopwatches, 1000);
+    intervalRef.current = intervalId;
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+      // Also clear from ref for safety
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, []);
+
   const steps = [
     { id: 'text', label: 'Crafting your vibe guide...', activeStep: 'Text Generation' },
     { id: 'assets', label: 'Painting your mood board...', activeStep: 'Image Generation' },
-    { id: 'tts', label: 'Recording your audio walkthrough...', activeStep: 'TTS Generation' },
   ];
 
   return (
@@ -122,8 +185,8 @@ const LoadingScreen: React.FC = () => {
 
         <div className="space-y-4">
           {steps.map((step) => {
-            const isCompleted = progress.messages.some(m => m.includes(step.activeStep)) || 
-                               (progress.step === step.activeStep && progress.status === 'completed');
+            const stopwatch = stopwatches[step.activeStep];
+            const isCompleted = stopwatch.startTime === null && stopwatch.elapsedTime > 0;
             const isProcessing = progress.step === step.activeStep && progress.status === 'processing';
 
             return (
@@ -145,9 +208,38 @@ const LoadingScreen: React.FC = () => {
                     <div className="w-6 h-6 rounded-full border-2 border-zinc-800" />
                   )}
                 </div>
-                <span className={`text-lg font-medium ${isCompleted ? 'text-zinc-200' : isProcessing ? 'text-white' : 'text-zinc-600'}`}>
-                  {step.label}
-                </span>
+                <div className="flex-1">
+                  <span className={`text-lg font-medium ${isCompleted || isProcessing ? 'text-white' : 'text-zinc-600'}`}>
+                    {step.label}
+                  </span>
+                  <div className="h-1.5 mt-2 rounded-full overflow-hidden bg-zinc-800">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ 
+                        width: isCompleted ? '100%' : isProcessing ? '80%' : 0 
+                      }}
+                      transition={{ 
+                        duration: isCompleted ? 0.5 : isProcessing ? 2 : 0,
+                        ease: isCompleted ? 'ease-out' : 'linear'
+                      }}
+                      className="h-full bg-teal-500"
+                    />
+                  </div>
+                </div>
+                <div className={`text-sm ${isCompleted || isProcessing ? 'text-teal-500' : 'text-zinc-600'}`}>
+                  {(() => {
+                    const stopwatch = stopwatches[step.activeStep];
+                    const seconds = stopwatch.elapsedTime;
+                    const minutes = Math.floor(seconds / 60);
+                    const remainingSeconds = seconds % 60;
+                    const formattedTime = `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+                    
+                    if (isCompleted || isProcessing) {
+                      return formattedTime;
+                    }
+                    return '--:--';
+                  })()}
+                </div>
               </motion.div>
             );
           })}
