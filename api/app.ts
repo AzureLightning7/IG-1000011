@@ -3,19 +3,13 @@
  */
 
 import cors from 'cors';
-import express, { type NextFunction, type Request, type Response } from 'express';
+import express, { type Request, type Response } from 'express';
 import path from 'path';
 import dotenv from 'dotenv';
-import { fileURLToPath } from 'url';
 
 import authRoutes from './routes/auth.js';
 import generateRoutes from './routes/generate.js';
 import generateTTSRoutes from './routes/generateTTS.js';
-
-dotenv.config();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -39,13 +33,13 @@ app.use('/api/generate-tts', generateTTSRoutes);
 
 app.use(
   '/generated',
-  express.static(path.join(process.cwd(), 'api/public/generated'), {
+  express.static(path.join(process.cwd(), 'public/generated'), {
     maxAge: '1h',
     immutable: false,
   })
 );
 
-app.use((error: Error, _req: Request, res: Response, _next: NextFunction) => {
+app.use((error: Error, _req: Request, res: Response) => {
   res.status(500).json({
     success: false,
     error: 'Server internal error',

@@ -35,7 +35,7 @@ export const generateImage = async (prompt: string, sessionId: string): Promise<
     body?.data?.[0]?.base64;
 
   const imageFileName = `${sessionId}-mood-board.png`;
-  const imagePath = path.join(process.cwd(), 'api/public/generated/images', imageFileName);
+  const imagePath = path.join(process.cwd(), 'public/generated/images', imageFileName);
 
   await fs.mkdir(path.dirname(imagePath), { recursive: true });
 

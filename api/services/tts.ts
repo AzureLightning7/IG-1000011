@@ -34,7 +34,7 @@ export const generateTTS = async (text: string, sessionId: string): Promise<stri
   }
 
   const audioFileName = `${sessionId}-walkthrough.mp3`;
-  const audioPath = path.join(process.cwd(), 'api/public/generated/audio', audioFileName);
+  const audioPath = path.join(process.cwd(), 'public/generated/audio', audioFileName);
 
   await fs.mkdir(path.dirname(audioPath), { recursive: true });
 

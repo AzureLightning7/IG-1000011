@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { generateText } from '../services/textGen.js';
 import { generateImage } from '../services/imageGen.js';
-import { QuizData } from '../../shared/types.js';
+import { QuizData } from '../../common/types.js';
 import crypto from 'crypto';
 
 const router = Router();
@@ -15,7 +15,7 @@ router.post('/', async (req: Request, res: Response) => {
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
 
-  const sendUpdate = (step: string, status: string, data?: any) => {
+  const sendUpdate = (step: string, status: string, data?: unknown) => {
     res.write(`data: ${JSON.stringify({ step, status, data })}\n\n`);
   };
 

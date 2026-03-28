@@ -31,5 +31,5 @@ export interface QuizData {
 export interface GenerationStatus {
   step: string;
   status: 'pending' | 'processing' | 'completed' | 'error';
-  data?: any;
+  data?: unknown;
 }

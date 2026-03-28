@@ -1,5 +1,5 @@
 import React from 'react';
-import { Product } from '../../shared/types';
+import { Product } from '../../common/types';
 import { ExternalLink, ShoppingBag } from 'lucide-react';
 
 interface ShoppingListProps {

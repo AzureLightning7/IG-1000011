@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { QuizData, GeneratedContent, MediaContent } from '../../shared/types';
+import { QuizData, GeneratedContent, MediaContent } from '../../common/types';
 
 interface AppState {
   quizData: QuizData | null;

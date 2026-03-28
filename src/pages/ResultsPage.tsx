@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { motion } from 'framer-motion';
-import { RefreshCw, Download, Share2 } from 'lucide-react';
+import { RefreshCw, Share2 } from 'lucide-react';
 import MoodBoard from '../components/MoodBoard';
 import AudioPlayer from '../components/AudioPlayer';
 import ShoppingList from '../components/ShoppingList';

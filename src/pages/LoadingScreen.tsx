@@ -1,13 +1,12 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { CheckCircle2, Loader2, Sparkles } from 'lucide-react';
 
 const LoadingScreen: React.FC = () => {
   const navigate = useNavigate();
   const { quizData, setGeneratedContent, setMediaContent, setProgress, progress, setIsGenerating } = useStore();
-  const eventSourceRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
     if (!quizData) {
@@ -53,7 +52,7 @@ const LoadingScreen: React.FC = () => {
       }
     };
 
-    const handleUpdate = (payload: any) => {
+    const handleUpdate = (payload: { step: string; status: 'pending' | 'processing' | 'completed' | 'error'; data?: unknown }) => {
       const { step, status, data } = payload;
 
       const nonCriticalSteps = new Set([
@@ -62,7 +61,7 @@ const LoadingScreen: React.FC = () => {
       ]);
 
       if (status === 'error') {
-        const message = data?.message ?? 'Generation step failed.';
+        const message = (data as { message?: string })?.message ?? 'Generation step failed.';
 
         if (nonCriticalSteps.has(step)) {
           setProgress(step, 'completed', `${step} failed — continuing. (${message})`);
@@ -75,11 +74,11 @@ const LoadingScreen: React.FC = () => {
       setProgress(step, status);
 
       if (step === 'Text Generation' && status === 'completed') {
-        setGeneratedContent(data);
+        setGeneratedContent(data as any);
       } else if (step === 'Image Generation' && status === 'completed') {
-        setMediaContent({ imageUrl: data.url });
+        setMediaContent({ imageUrl: (data as { url?: string })?.url });
       } else if (step === 'TTS Generation' && status === 'completed') {
-        setMediaContent({ audioUrl: data.url });
+        setMediaContent({ audioUrl: (data as { url?: string })?.url });
       } else if (step === 'Complete' && status === 'completed') {
         setIsGenerating(false);
         // We wait a moment so the user sees the "Complete" state
@@ -89,11 +88,7 @@ const LoadingScreen: React.FC = () => {
 
     startGeneration();
 
-    return () => {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-      }
-    };
+    return () => {};
   }, [quizData, navigate, setGeneratedContent, setMediaContent, setProgress, setIsGenerating]);
 
   const steps = [

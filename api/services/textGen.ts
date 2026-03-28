@@ -1,4 +1,4 @@
-import { QuizData, GeneratedContent } from '../../shared/types.js';
+import { QuizData, GeneratedContent } from '../../common/types.js';
 import { minimaxClient } from './minimaxClient.js';
 
 const parseJsonFromModelContent = (content: unknown) => {
@@ -95,7 +95,16 @@ Include 6-8 products that fit within the $${budget} total budget. Make product s
       }
     );
   } catch (error) {
-    const err = error as any;
+    const err = error as {
+      response?: {
+        status?: number;
+        data?: {
+          message?: string;
+          error?: string;
+        };
+      };
+      message?: string;
+    };
     const status = err?.response?.status;
     const rawDetail = err?.response?.data?.message ?? err?.response?.data?.error ?? err?.response?.data ?? err?.message;
     let detail: string;
