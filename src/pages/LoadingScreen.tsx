@@ -59,8 +59,6 @@ const LoadingScreen: React.FC = () => {
       const nonCriticalSteps = new Set([
         'Image Generation',
         'TTS Generation',
-        'Music Generation',
-        'Video Generation',
       ]);
 
       if (status === 'error') {
@@ -82,10 +80,6 @@ const LoadingScreen: React.FC = () => {
         setMediaContent({ imageUrl: data.url });
       } else if (step === 'TTS Generation' && status === 'completed') {
         setMediaContent({ audioUrl: data.url });
-      } else if (step === 'Music Generation' && status === 'completed') {
-        setMediaContent({ musicUrl: data.url });
-      } else if (step === 'Video Generation' && status === 'completed') {
-        setMediaContent({ videoUrl: data.url });
       } else if (step === 'Complete' && status === 'completed') {
         setIsGenerating(false);
         // We wait a moment so the user sees the "Complete" state
@@ -106,8 +100,6 @@ const LoadingScreen: React.FC = () => {
     { id: 'text', label: 'Crafting your vibe guide...', activeStep: 'Text Generation' },
     { id: 'assets', label: 'Painting your mood board...', activeStep: 'Image Generation' },
     { id: 'tts', label: 'Recording your audio walkthrough...', activeStep: 'TTS Generation' },
-    { id: 'music', label: 'Composing your study playlist...', activeStep: 'Music Generation' },
-    { id: 'video', label: 'Directing your vibe video...', activeStep: 'Video Generation' },
   ];
 
   return (

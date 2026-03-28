@@ -5,8 +5,6 @@ import { motion } from 'framer-motion';
 import { RefreshCw, Download, Share2 } from 'lucide-react';
 import MoodBoard from '../components/MoodBoard';
 import AudioPlayer from '../components/AudioPlayer';
-import MusicPlayer from '../components/MusicPlayer';
-import VideoPlayer from '../components/VideoPlayer';
 import ShoppingList from '../components/ShoppingList';
 
 const ResultsPage: React.FC = () => {
@@ -40,21 +38,11 @@ const ResultsPage: React.FC = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 space-y-24">
-        {/* Mood Board & Video */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <section>
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              🖼️ Mood Board
-            </h2>
-            <MoodBoard imageUrl={mediaContent.imageUrl} vibeName={generatedContent.vibeName} />
-          </section>
-          <section>
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              🎬 Room Preview
-            </h2>
-            <VideoPlayer videoUrl={mediaContent.videoUrl} />
-          </section>
-        </div>
+        {/* Mood Board */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">🖼️ Mood Board</h2>
+          <MoodBoard imageUrl={mediaContent.imageUrl} vibeName={generatedContent.vibeName} />
+        </section>
 
         {/* Vibe Guide & Audio */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -77,19 +65,9 @@ const ResultsPage: React.FC = () => {
             </div>
           </section>
           
-          <section className="space-y-8">
-            <div>
-              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                🎧 Audio Guide
-              </h2>
-              <AudioPlayer audioUrl={mediaContent.audioUrl} label="Walkthrough Script" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                🎵 Study Track
-              </h2>
-              <MusicPlayer musicUrl={mediaContent.musicUrl} label="Ambient Focus" />
-            </div>
+          <section>
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">🎧 Audio Guide</h2>
+            <AudioPlayer audioUrl={mediaContent.audioUrl} label="Walkthrough Script" />
           </section>
         </div>
 
