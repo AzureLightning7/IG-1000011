@@ -9,10 +9,8 @@ interface MoodBoardProps {
   vibeName: string;
 }
 
-const TRAE_API_BASE = 'https://coreva-normal.trae.ai/api/ide/v1/text_to_image';
-
 const MoodBoard: React.FC<MoodBoardProps> = ({ imageUrl, vibeName }) => {
-  const { customImageUrl, setCustomImageUrl, isCustomizing, setIsCustomizing, generatedContent } = useStore();
+  const { customImageUrl, setCustomImageUrl, isCustomizing, setIsCustomizing, generatedContent, mediaContent } = useStore();
   const [customizationPrompt, setCustomizationPrompt] = useState('');
   const [isGeneratingCustom, setIsGeneratingCustom] = useState(false);
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
@@ -25,28 +23,44 @@ const MoodBoard: React.FC<MoodBoardProps> = ({ imageUrl, vibeName }) => {
       return;
     }
 
+    const currentImageUrl = displayImageUrl;
+    if (!currentImageUrl) {
+      toast.error('No image to customize');
+      return;
+    }
+
     setIsGeneratingCustom(true);
     setIsCustomizing(true);
     setShowLoadingOverlay(true);
 
     try {
-      const originalPrompt = generatedContent?.imagePrompt || vibeName;
-      const combinedPrompt = `${originalPrompt}, ${customizationPrompt}`;
-      const encodedPrompt = encodeURIComponent(combinedPrompt);
-      const newImageUrl = `${TRAE_API_BASE}?prompt=${encodedPrompt}&image_size=landscape_16_9`;
-      
-      setTimeout(() => {
-        setCustomImageUrl(newImageUrl);
-        setIsGeneratingCustom(false);
-        setShowLoadingOverlay(false);
+      const response = await fetch('/api/customize-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          originalImageUrl: currentImageUrl,
+          customizationPrompt: customizationPrompt,
+          vibeName: vibeName
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setCustomImageUrl(result.newImageUrl);
         toast.success('New image generated with your customization!');
-      }, 3000);
+      } else {
+        throw new Error(result.message || 'Failed to generate customized image');
+      }
       
     } catch (error) {
       console.error('Customization error:', error);
+      toast.error('Failed to generate customized image');
+    } finally {
       setIsGeneratingCustom(false);
       setShowLoadingOverlay(false);
-      toast.error('Failed to generate customized image');
     }
   };
 

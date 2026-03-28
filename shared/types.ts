@@ -33,3 +33,13 @@ export interface GenerationStatus {
   status: 'pending' | 'processing' | 'completed' | 'error';
   data?: any;
 }
+
+export interface ImageCustomizationRequest {
+  originalImageUrl: string;
+  customizationPrompt: string;
+  vibeName: string;
+}
+
+export interface ImageCustomizationResponse {
+  newImageUrl: string;
+}
