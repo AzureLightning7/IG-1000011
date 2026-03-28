@@ -1,0 +1,307 @@
+/* InteractiveRoomDisplay.css */
+
+.slideshow-container {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.slideshow {
+  perspective: 1000px;
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 66.67%; /* 3:2 aspect ratio */
+}
+
+.scene {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.1s ease-out;
+}
+
+.slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+.room-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 24px;
+}
+
+.product-item {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.product-item:hover {
+  transform: translate(-50%, -50%) scale(1.1);
+  z-index: 20;
+}
+
+.product-marker {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(45, 212, 191, 0.9);
+  color: #000;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 14px;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(45, 212, 191, 0.4);
+  transition: all 0.3s ease;
+}
+
+.product-marker:hover {
+  background: rgba(45, 212, 191, 1);
+  box-shadow: 0 6px 16px rgba(45, 212, 191, 0.6);
+  transform: translate(-50%, -50%) scale(1.05);
+}
+
+.product-item.faded {
+  transition: all 0.3s ease;
+}
+
+.product-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #0a0a0a;
+  border: 1px solid #1e1e1e;
+  border-radius: 24px;
+  padding: 32px;
+  width: 90%;
+  max-width: 500px;
+  z-index: 1000;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.close-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.close-button:hover {
+  background: #1e1e1e;
+  color: #fff;
+}
+
+.popup-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.popup-category {
+  font-size: 14px;
+  color: #999;
+  margin-bottom: 16px;
+}
+
+.popup-price {
+  font-size: 18px;
+  font-weight: bold;
+  color: #2dd4bf;
+  margin-bottom: 16px;
+}
+
+.popup-description {
+  font-size: 16px;
+  color: #ccc;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.shop-button {
+  width: 100%;
+  background: #2dd4bf;
+  color: #000;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.shop-button:hover {
+  background: #14b8a6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(45, 212, 191, 0.3);
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(10, 10, 10, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 24px;
+  z-index: 50;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #1e1e1e;
+  border-top: 3px solid #2dd4bf;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  background: #111;
+  border-radius: 24px;
+  color: #999;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .slideshow-container {
+    border-radius: 16px;
+  }
+  
+  .slideshow {
+    padding-bottom: 75%; /* 4:3 aspect ratio for mobile */
+  }
+  
+  .room-image {
+    border-radius: 16px;
+  }
+  
+  .product-marker {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+  
+  .product-popup {
+    width: 95%;
+    padding: 24px;
+    border-radius: 16px;
+  }
+  
+  .popup-title {
+    font-size: 20px;
+  }
+  
+  .loading-overlay {
+    border-radius: 16px;
+  }
+  
+  /* Disable 3D effects on mobile for better performance */
+  .scene {
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* Animation keyframes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Add pulse animation to product markers */
+.product-marker {
+  animation: pulse 3s infinite;
+}
+
+/* Hover effects for better user feedback */
+.product-item {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.product-item:hover .product-marker {
+  animation: none;
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+/* Ensure smooth transitions */
+* {
+  transition: all 0.3s ease;
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .scene {
+    transition: none;
+  }
+  
+  .product-item,
+  .product-marker,
+  .shop-button,
+  .close-button {
+    transition: none;
+  }
+  
+  .loading-spinner {
+    animation: none;
+  }
+  
+  .product-marker {
+    animation: none;
+  }
+}
