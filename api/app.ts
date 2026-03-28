@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url';
 
 import authRoutes from './routes/auth.js';
 import generateRoutes from './routes/generate.js';
-import identifyProductsRoutes from './routes/identifyProducts.js';
+import customizeImageRoutes from './routes/customizeImage.js';
 
 dotenv.config();
 
@@ -35,7 +35,7 @@ app.get('/api/health', (_req: Request, res: Response) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/generate', generateRoutes);
-app.use('/api/identify-products', identifyProductsRoutes);
+app.use('/api/customize-image', customizeImageRoutes);
 
 app.use(
   '/generated',

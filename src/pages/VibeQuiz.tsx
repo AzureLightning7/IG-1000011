@@ -218,7 +218,7 @@ const VibeQuiz: React.FC = () => {
         {sections.map((section, index) => (
           <section 
             key={index} 
-            ref={(el) => { sectionRefs.current[index] = el; }}
+            ref={(el) => { sectionRefs.current[index] = el as HTMLDivElement; }}
             className="h-screen snap-start flex flex-col items-center justify-center p-6 quiz-section"
           >
             <div className="max-w-3xl w-full">

@@ -1,7 +1,6 @@
 import { QuizData, GeneratedContent } from '../../shared/types.js';
 import { minimaxClient } from './minimaxClient.js';
 
-// Schema validation for GeneratedContent
 const isValidProduct = (product: unknown): boolean => {
   if (!product || typeof product !== 'object') return false;
   const p = product as Record<string, unknown>;
@@ -17,17 +16,14 @@ const isValidGeneratedContent = (content: unknown): content is GeneratedContent 
   if (!content || typeof content !== 'object') return false;
   const c = content as Record<string, unknown>;
   
-  // Check required string fields
   if (typeof c.vibeName !== 'string') return false;
   if (typeof c.description !== 'string') return false;
   if (typeof c.narrationScript !== 'string') return false;
   if (typeof c.imagePrompt !== 'string') return false;
   
-  // Check layoutTips array
   if (!Array.isArray(c.layoutTips)) return false;
   if (!c.layoutTips.every((tip) => typeof tip === 'string')) return false;
   
-  // Check products array
   if (!Array.isArray(c.products)) return false;
   if (!c.products.every(isValidProduct)) return false;
   
@@ -69,40 +65,92 @@ const parseJsonFromModelContent = (content: unknown) => {
       repaired = repaired.replace(/,\s*}/g, '}');
       repaired = repaired.replace(/,\s*]/g, ']');
       
-      const lastBrace = repaired.lastIndexOf('}');
-      const lastBracket = repaired.lastIndexOf(']');
-      const lastValidEnd = Math.max(lastBrace, lastBracket);
+      const fixUnescapedQuotes = (str: string): string => {
+        let result = '';
+        let inString = false;
+        let escapeNext = false;
+        
+        for (let i = 0; i < str.length; i++) {
+          const char = str[i];
+          
+          if (escapeNext) {
+            result += char;
+            escapeNext = false;
+            continue;
+          }
+          
+          if (char === '\\') {
+            result += char;
+            escapeNext = true;
+            continue;
+          }
+          
+          if (char === '"') {
+            if (inString) {
+              const nextChar = str[i + 1];
+              if (nextChar && !['}', ']', ',', ':'].includes(nextChar)) {
+                result += '\\"';
+              } else {
+                result += char;
+                inString = false;
+              }
+            } else {
+              const prevChar = str[i - 1];
+              if (prevChar && !['{', '}', ',', '[', ']', ':'].includes(prevChar)) {
+                result += '\\"';
+              } else {
+                result += char;
+                inString = true;
+              }
+            }
+          } else {
+            result += char;
+          }
+        }
+        
+        return result;
+      };
       
-      if (lastValidEnd > 0) {
-        let truncated = repaired.slice(0, lastValidEnd + 1);
+      repaired = fixUnescapedQuotes(repaired);
+      
+      try {
+        return JSON.parse(repaired);
+      } catch {
+        const lastBrace = repaired.lastIndexOf('}');
+        const lastBracket = repaired.lastIndexOf(']');
+        const lastValidEnd = Math.max(lastBrace, lastBracket);
         
-        let openBraces = 0;
-        let openBrackets = 0;
-        for (const char of truncated) {
-          if (char === '{') openBraces++;
-          if (char === '}') openBraces--;
-          if (char === '[') openBrackets++;
-          if (char === ']') openBrackets--;
+        if (lastValidEnd > 0) {
+          let truncated = repaired.slice(0, lastValidEnd + 1);
+          
+          let openBraces = 0;
+          let openBrackets = 0;
+          for (const char of truncated) {
+            if (char === '{') openBraces++;
+            if (char === '}') openBraces--;
+            if (char === '[') openBrackets++;
+            if (char === ']') openBrackets--;
+          }
+          
+          while (openBrackets > 0) {
+            truncated += ']';
+            openBrackets--;
+          }
+          while (openBraces > 0) {
+            truncated += '}';
+            openBraces--;
+          }
+          
+          try {
+            return JSON.parse(truncated);
+          } catch {
+            // Continue to throw original error
+          }
         }
         
-        while (openBrackets > 0) {
-          truncated += ']';
-          openBrackets--;
-        }
-        while (openBraces > 0) {
-          truncated += '}';
-          openBraces--;
-        }
-        
-        try {
-          return JSON.parse(truncated);
-        } catch {
-          // Continue to throw original error
-        }
+        console.error('JSON repair failed. Content around error position:', repaired.slice(Math.max(0, 2200), 2300));
+        throw originalError;
       }
-      
-      console.error('JSON repair failed. Content around error position:', repaired.slice(Math.max(0, 2200), 2300));
-      throw originalError;
     }
   };
 
@@ -203,7 +251,6 @@ Include 6-8 products that fit within the $${budget} total budget. Make product s
   try {
     const aiResponse = response.data;
     
-    // Debug logging
     console.log('MiniMax response structure:', JSON.stringify(aiResponse, null, 2).slice(0, 1000));
     
     const statusCode = aiResponse?.base_resp?.status_code;
@@ -212,23 +259,15 @@ Include 6-8 products that fit within the $${budget} total budget. Make product s
       throw new Error(aiResponse?.base_resp?.status_msg ?? 'AI request failed');
     }
 
-    // Try multiple possible response structures
     let content: unknown = null;
     
-    // Structure 1: Standard MiniMax format with nested data
     if (aiResponse?.data?.choices?.[0]?.message?.content) {
       content = aiResponse.data.choices[0].message.content;
-    }
-    // Structure 2: Direct choices array
-    else if (aiResponse?.choices?.[0]?.message?.content) {
+    } else if (aiResponse?.choices?.[0]?.message?.content) {
       content = aiResponse.choices[0].message.content;
-    }
-    // Structure 3: Content directly on response
-    else if (aiResponse?.content) {
+    } else if (aiResponse?.content) {
       content = aiResponse.content;
-    }
-    // Structure 4: Text field
-    else if (aiResponse?.text) {
+    } else if (aiResponse?.text) {
       content = aiResponse.text;
     }
     
@@ -245,9 +284,6 @@ Include 6-8 products that fit within the $${budget} total budget. Make product s
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error('Error parsing MiniMax text generation response:', error);
-    if (typeof content === 'string') {
-      console.error('Full content that failed to parse:', content);
-    }
     throw new Error(`Failed to parse text generation results: ${errorMessage}`);
   }
 };
