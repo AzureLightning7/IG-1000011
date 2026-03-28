@@ -5,6 +5,13 @@ export interface Product {
   searchQuery: string;
 }
 
+export interface IdentifiedProduct extends Product {
+  position: { x: number; y: number };
+  size: { width: number; height: number };
+  confidence: number;
+  description: string;
+}
+
 export interface GeneratedContent {
   vibeName: string;
   description: string;
