@@ -1,0 +1,184 @@
+import React, { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useStore } from '../store/useStore';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CheckCircle2, Loader2, Sparkles } from 'lucide-react';
+
+const LoadingScreen: React.FC = () => {
+  const navigate = useNavigate();
+  const { quizData, setGeneratedContent, setMediaContent, setProgress, progress, setIsGenerating } = useStore();
+  const eventSourceRef = useRef<EventSource | null>(null);
+
+  useEffect(() => {
+    if (!quizData) {
+      navigate('/');
+      return;
+    }
+
+    setIsGenerating(true);
+    
+    // Start the generation process
+    const startGeneration = async () => {
+      try {
+        const response = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(quizData),
+        });
+
+        const reader = response.body?.getReader();
+        if (!reader) throw new Error('No reader available');
+
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const payload = JSON.parse(line.replace('data: ', ''));
+              handleUpdate(payload);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Generation error:', error);
+        setProgress('Error', 'error', 'Something went wrong. Please try again.');
+      }
+    };
+
+    const handleUpdate = (payload: any) => {
+      const { step, status, data } = payload;
+
+      const nonCriticalSteps = new Set([
+        'Image Generation',
+        'TTS Generation',
+        'Music Generation',
+        'Video Generation',
+      ]);
+
+      if (status === 'error') {
+        const message = data?.message ?? 'Generation step failed.';
+
+        if (nonCriticalSteps.has(step)) {
+          setProgress(step, 'completed', `${step} failed — continuing. (${message})`);
+        } else {
+          setProgress(step, 'error', message);
+        }
+        return;
+      }
+
+      setProgress(step, status);
+
+      if (step === 'Text Generation' && status === 'completed') {
+        setGeneratedContent(data);
+      } else if (step === 'Image Generation' && status === 'completed') {
+        setMediaContent({ imageUrl: data.url });
+      } else if (step === 'TTS Generation' && status === 'completed') {
+        setMediaContent({ audioUrl: data.url });
+      } else if (step === 'Music Generation' && status === 'completed') {
+        setMediaContent({ musicUrl: data.url });
+      } else if (step === 'Video Generation' && status === 'completed') {
+        setMediaContent({ videoUrl: data.url });
+      } else if (step === 'Complete' && status === 'completed') {
+        setIsGenerating(false);
+        // We wait a moment so the user sees the "Complete" state
+        setTimeout(() => navigate('/results'), 1500);
+      }
+    };
+
+    startGeneration();
+
+    return () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
+    };
+  }, [quizData, navigate, setGeneratedContent, setMediaContent, setProgress, setIsGenerating]);
+
+  const steps = [
+    { id: 'text', label: 'Crafting your vibe guide...', activeStep: 'Text Generation' },
+    { id: 'assets', label: 'Painting your mood board...', activeStep: 'Image Generation' },
+    { id: 'tts', label: 'Recording your audio walkthrough...', activeStep: 'TTS Generation' },
+    { id: 'music', label: 'Composing your study playlist...', activeStep: 'Music Generation' },
+    { id: 'video', label: 'Directing your vibe video...', activeStep: 'Video Generation' },
+  ];
+
+  return (
+    <div className="h-screen flex flex-col items-center justify-center p-6 bg-[#0a0a0a] overflow-hidden relative">
+      {/* Background Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-teal-500/10 blur-[120px] rounded-full" />
+      
+      <div className="relative z-10 w-full max-w-lg">
+        <div className="text-center mb-12">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+            className="inline-block mb-6"
+          >
+            <Sparkles className="w-12 h-12 text-teal-400" />
+          </motion.div>
+          <h2 className="text-3xl font-bold mb-2">Generating your Vibe</h2>
+          <p className="text-zinc-500">This takes about a minute. Hang tight!</p>
+        </div>
+
+        <div className="space-y-4">
+          {steps.map((step) => {
+            const isCompleted = progress.messages.some(m => m.includes(step.activeStep)) || 
+                               (progress.step === step.activeStep && progress.status === 'completed');
+            const isProcessing = progress.step === step.activeStep && progress.status === 'processing';
+
+            return (
+              <motion.div
+                key={step.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className={`flex items-center gap-4 p-4 rounded-xl border transition-all duration-500 ${
+                  isCompleted ? 'bg-teal-500/5 border-teal-500/20' : 
+                  isProcessing ? 'bg-zinc-900 border-zinc-700' : 'bg-transparent border-transparent opacity-40'
+                }`}
+              >
+                <div className="flex-shrink-0">
+                  {isCompleted ? (
+                    <CheckCircle2 className="w-6 h-6 text-teal-500" />
+                  ) : isProcessing ? (
+                    <Loader2 className="w-6 h-6 text-teal-500 animate-spin" />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full border-2 border-zinc-800" />
+                  )}
+                </div>
+                <span className={`text-lg font-medium ${isCompleted ? 'text-zinc-200' : isProcessing ? 'text-white' : 'text-zinc-600'}`}>
+                  {step.label}
+                </span>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {progress.status === 'error' && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-8 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-center"
+          >
+            {progress.messages[progress.messages.length - 1] || 'Generation failed. Please try again.'}
+            <button 
+              onClick={() => navigate('/')}
+              className="block w-full mt-4 py-2 bg-red-500 text-black font-bold rounded-lg"
+            >
+              Go Back
+            </button>
+          </motion.div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default LoadingScreen;
