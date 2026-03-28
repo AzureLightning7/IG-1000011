@@ -1,12 +1,48 @@
 import { QuizData, GeneratedContent } from '../../shared/types.js';
 import { minimaxClient } from './minimaxClient.js';
 
+// Schema validation for GeneratedContent
+const isValidProduct = (product: unknown): boolean => {
+  if (!product || typeof product !== 'object') return false;
+  const p = product as Record<string, unknown>;
+  return (
+    typeof p.name === 'string' &&
+    typeof p.category === 'string' &&
+    typeof p.priceRange === 'string' &&
+    typeof p.searchQuery === 'string'
+  );
+};
+
+const isValidGeneratedContent = (content: unknown): content is GeneratedContent => {
+  if (!content || typeof content !== 'object') return false;
+  const c = content as Record<string, unknown>;
+  
+  // Check required string fields
+  if (typeof c.vibeName !== 'string') return false;
+  if (typeof c.description !== 'string') return false;
+  if (typeof c.narrationScript !== 'string') return false;
+  if (typeof c.imagePrompt !== 'string') return false;
+  
+  // Check layoutTips array
+  if (!Array.isArray(c.layoutTips)) return false;
+  if (!c.layoutTips.every((tip) => typeof tip === 'string')) return false;
+  
+  // Check products array
+  if (!Array.isArray(c.products)) return false;
+  if (!c.products.every(isValidProduct)) return false;
+  
+  return true;
+};
+
 const parseJsonFromModelContent = (content: unknown) => {
   if (!content) {
     throw new Error('Empty model content');
   }
 
   if (typeof content === 'object') {
+    if (!isValidGeneratedContent(content)) {
+      throw new Error('Invalid content schema: object does not match GeneratedContent structure');
+    }
     return content;
   }
 
@@ -22,27 +58,80 @@ const parseJsonFromModelContent = (content: unknown) => {
   text = text.replace(/```/g, '');
   text = text.trim();
 
-  const tryParse = (candidate: string) => {
-    return JSON.parse(candidate);
+  const tryParse = (candidate: string): unknown => {
+    try {
+      return JSON.parse(candidate);
+    } catch (originalError) {
+      console.log('JSON parse failed, attempting repair...');
+      
+      let repaired = candidate;
+      
+      repaired = repaired.replace(/,\s*}/g, '}');
+      repaired = repaired.replace(/,\s*]/g, ']');
+      
+      const lastBrace = repaired.lastIndexOf('}');
+      const lastBracket = repaired.lastIndexOf(']');
+      const lastValidEnd = Math.max(lastBrace, lastBracket);
+      
+      if (lastValidEnd > 0) {
+        let truncated = repaired.slice(0, lastValidEnd + 1);
+        
+        let openBraces = 0;
+        let openBrackets = 0;
+        for (const char of truncated) {
+          if (char === '{') openBraces++;
+          if (char === '}') openBraces--;
+          if (char === '[') openBrackets++;
+          if (char === ']') openBrackets--;
+        }
+        
+        while (openBrackets > 0) {
+          truncated += ']';
+          openBrackets--;
+        }
+        while (openBraces > 0) {
+          truncated += '}';
+          openBraces--;
+        }
+        
+        try {
+          return JSON.parse(truncated);
+        } catch {
+          // Continue to throw original error
+        }
+      }
+      
+      console.error('JSON repair failed. Content around error position:', repaired.slice(Math.max(0, 2200), 2300));
+      throw originalError;
+    }
   };
 
+  let parsed: unknown;
+
   if (text.startsWith('{') || text.startsWith('[')) {
-    return tryParse(text);
+    parsed = tryParse(text);
+  } else {
+    const firstObject = text.indexOf('{');
+    const lastObject = text.lastIndexOf('}');
+    if (firstObject !== -1 && lastObject !== -1 && lastObject > firstObject) {
+      parsed = tryParse(text.slice(firstObject, lastObject + 1));
+    } else {
+      const firstArray = text.indexOf('[');
+      const lastArray = text.lastIndexOf(']');
+      if (firstArray !== -1 && lastArray !== -1 && lastArray > firstArray) {
+        parsed = tryParse(text.slice(firstArray, lastArray + 1));
+      } else {
+        throw new Error(`Could not locate JSON in model output: ${text.slice(0, 200)}`);
+      }
+    }
   }
 
-  const firstObject = text.indexOf('{');
-  const lastObject = text.lastIndexOf('}');
-  if (firstObject !== -1 && lastObject !== -1 && lastObject > firstObject) {
-    return tryParse(text.slice(firstObject, lastObject + 1));
+  if (!isValidGeneratedContent(parsed)) {
+    console.error('Parsed content:', JSON.stringify(parsed, null, 2).slice(0, 500));
+    throw new Error('Parsed content does not match expected schema');
   }
 
-  const firstArray = text.indexOf('[');
-  const lastArray = text.lastIndexOf(']');
-  if (firstArray !== -1 && lastArray !== -1 && lastArray > firstArray) {
-    return tryParse(text.slice(firstArray, lastArray + 1));
-  }
-
-  throw new Error(`Could not locate JSON in model output: ${text.slice(0, 200)}`);
+  return parsed;
 };
 
 export const generateText = async (quizData: QuizData): Promise<GeneratedContent> => {
@@ -90,7 +179,7 @@ Respond ONLY with this exact JSON structure:
 Include 6-8 products that fit within the $${budget} total budget. Make product search queries specific enough to find the right items on Amazon.`,
           },
         ],
-        max_tokens: 2000,
+        max_tokens: 4000,
         temperature: 0.8,
       }
     );
@@ -112,10 +201,53 @@ Include 6-8 products that fit within the $${budget} total budget. Make product s
   }
 
   try {
-    const content = response.data.choices[0].message.content;
+    const aiResponse = response.data;
+    
+    // Debug logging
+    console.log('MiniMax response structure:', JSON.stringify(aiResponse, null, 2).slice(0, 1000));
+    
+    const statusCode = aiResponse?.base_resp?.status_code;
+    
+    if (typeof statusCode === 'number' && statusCode !== 0) {
+      throw new Error(aiResponse?.base_resp?.status_msg ?? 'AI request failed');
+    }
+
+    // Try multiple possible response structures
+    let content: unknown = null;
+    
+    // Structure 1: Standard MiniMax format with nested data
+    if (aiResponse?.data?.choices?.[0]?.message?.content) {
+      content = aiResponse.data.choices[0].message.content;
+    }
+    // Structure 2: Direct choices array
+    else if (aiResponse?.choices?.[0]?.message?.content) {
+      content = aiResponse.choices[0].message.content;
+    }
+    // Structure 3: Content directly on response
+    else if (aiResponse?.content) {
+      content = aiResponse.content;
+    }
+    // Structure 4: Text field
+    else if (aiResponse?.text) {
+      content = aiResponse.text;
+    }
+    
+    if (!content) {
+      console.error('Could not find content in response. Available keys:', Object.keys(aiResponse || {}));
+      throw new Error('No content returned from AI');
+    }
+    
+    console.log('Extracted content type:', typeof content);
+    console.log('Content length:', typeof content === 'string' ? content.length : 'N/A');
+    console.log('Content preview:', typeof content === 'string' ? content.slice(0, 200) : JSON.stringify(content).slice(0, 200));
+    
     return parseJsonFromModelContent(content) as GeneratedContent;
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     console.error('Error parsing MiniMax text generation response:', error);
-    throw new Error('Failed to parse text generation results');
+    if (typeof content === 'string') {
+      console.error('Full content that failed to parse:', content);
+    }
+    throw new Error(`Failed to parse text generation results: ${errorMessage}`);
   }
 };
