@@ -10,8 +10,6 @@ export interface GeneratedContent {
   description: string;
   narrationScript: string;
   imagePrompt: string;
-  videoPrompt: string;
-  musicPrompt: string;
   layoutTips: string[];
   products: Product[];
 }
@@ -19,8 +17,6 @@ export interface GeneratedContent {
 export interface MediaContent {
   imageUrl?: string;
   audioUrl?: string;
-  musicUrl?: string;
-  videoUrl?: string;
 }
 
 export interface QuizData {

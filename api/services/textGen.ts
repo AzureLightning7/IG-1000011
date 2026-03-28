@@ -76,8 +76,6 @@ Respond ONLY with this exact JSON structure:
   "description": "2-3 sentence overview of the vibe",
   "narrationScript": "A friendly 100-150 word audio walkthrough script. Start with 'Welcome to your DormVibe setup guide!' and walk through the room section by section. End with an encouraging sign-off.",
   "imagePrompt": "A detailed prompt for generating a mood board image of this dorm room. Include specific furniture, decorations, lighting, colors, textures, and camera angle. Be very descriptive.",
-  "videoPrompt": "A short prompt for generating a 6-second video clip of this dorm aesthetic. Describe the camera movement and mood.",
-  "musicPrompt": "A description of ambient study music matching this vibe. Include tempo, instruments, and mood. Keep it under 30 words.",
   "layoutTips": ["tip 1", "tip 2", "tip 3"],
   "products": [
     {

@@ -1,6 +1,6 @@
 # DormVibe 🏠✨
 
-**DormVibe** is an AI-powered dorm room styling assistant for college students. By taking a simple "vibe quiz," students can generate a complete room design package including mood boards, audio walkthroughs, ambient study music, and even a short video preview of their future space—all powered by the MiniMax AI API.
+**DormVibe** is an AI-powered dorm room styling assistant for college students. By taking a simple "vibe quiz," students can generate a complete room design package including a mood board and an audio walkthrough—all powered by the MiniMax AI API.
 
 ## 🚀 Getting Started
 
@@ -52,7 +52,7 @@ The frontend is configured to proxy API requests to the backend automatically.
 
 - **Frontend**: React (with Vite), Tailwind CSS, Framer Motion, Lucide React, Zustand
 - **Backend**: Node.js, Express, Axios
-- **AI Integration**: MiniMax API (Text, Image, TTS, Music, and Video generation)
+- **AI Integration**: MiniMax API (Text, Image, TTS)
 - **Communication**: Server-Sent Events (SSE) for real-time generation progress
 
 ## 📂 Project Structure
