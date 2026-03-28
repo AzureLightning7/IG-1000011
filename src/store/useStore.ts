@@ -9,10 +9,24 @@ interface CartItem {
   image: string;
 }
 
+interface SellerItem {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  pickupLocation: string;
+  quantity: number;
+  category: string;
+  images: string[];
+  isFree: boolean;
+}
+
 interface AppState {
   quizData: QuizData | null;
   generatedContent: GeneratedContent | null;
   mediaContent: MediaContent;
+  customImageUrl: string | null;
+  isCustomizing: boolean;
   isGenerating: boolean;
   progress: {
     step: string;
@@ -20,13 +34,17 @@ interface AppState {
     messages: string[];
   };
   cartItems: CartItem[];
+  sellerItems: SellerItem[];
   setQuizData: (data: QuizData) => void;
   setGeneratedContent: (content: GeneratedContent) => void;
   setMediaContent: (media: Partial<MediaContent>) => void;
+  setCustomImageUrl: (url: string | null) => void;
+  setIsCustomizing: (isCustomizing: boolean) => void;
   setIsGenerating: (isGenerating: boolean) => void;
   setProgress: (step: string, status: 'pending' | 'processing' | 'completed' | 'error', message?: string) => void;
   addToCart: (item: CartItem) => void;
   removeFromCart: (id: string) => void;
+  addSellerItem: (item: SellerItem) => void;
   reset: () => void;
 }
 
@@ -34,6 +52,8 @@ const initialState = {
   quizData: null,
   generatedContent: null,
   mediaContent: {},
+  customImageUrl: null,
+  isCustomizing: false,
   isGenerating: false,
   progress: {
     step: 'Initializing',
@@ -41,6 +61,7 @@ const initialState = {
     messages: [],
   },
   cartItems: [],
+  sellerItems: [],
 };
 
 export const useStore = create<AppState>((set) => ({
@@ -50,6 +71,8 @@ export const useStore = create<AppState>((set) => ({
   setMediaContent: (media) => set((state) => ({ 
     mediaContent: { ...state.mediaContent, ...media } 
   })),
+  setCustomImageUrl: (url) => set({ customImageUrl: url }),
+  setIsCustomizing: (isCustomizing) => set({ isCustomizing }),
   setIsGenerating: (isGenerating) => set({ isGenerating }),
   setProgress: (step, status, message) => set((state) => ({
     progress: {
@@ -63,6 +86,9 @@ export const useStore = create<AppState>((set) => ({
   })),
   removeFromCart: (id) => set((state) => ({ 
     cartItems: state.cartItems.filter((item) => item.id !== id) 
+  })),
+  addSellerItem: (item) => set((state) => ({ 
+    sellerItems: [...state.sellerItems, item] 
   })),
   reset: () => set(initialState),
 }));

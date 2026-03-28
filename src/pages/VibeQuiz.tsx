@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { motion } from 'framer-motion';
@@ -9,30 +9,61 @@ const INTERESTS = [
   'Reading', 'Minimalism', 'Tech', 'Cottagecore', 'Streetwear', 'Film', 'Cooking', 'Fitness'
 ];
 
-const COLOR_PALETTES = [
-  { name: 'Warm Earth', colors: ['bg-[#D27D2D]', 'bg-[#F5F5DC]', 'bg-[#808000]', 'bg-[#5C4033]'] },
-  { name: 'Cool Ocean', colors: ['bg-[#000080]', 'bg-[#87CEEB]', 'bg-[#FFFFFF]', 'bg-[#2E8B57]'] },
-  { name: 'Soft Pastels', colors: ['bg-[#E6E6FA]', 'bg-[#FFC0CB]', 'bg-[#F5FFFA]', 'bg-[#FFFFE0]'] },
-  { name: 'Dark & Moody', colors: ['bg-[#36454F]', 'bg-[#301934]', 'bg-[#014421]', 'bg-[#000000]'] },
-  { name: 'Bright & Bold', colors: ['bg-[#FFA500]', 'bg-[#0000FF]', 'bg-[#FF69B4]', 'bg-[#FFFF00]'] },
-  { name: 'Neutral Minimal', colors: ['bg-[#FFFFFF]', 'bg-[#D3D3D3]', 'bg-[#F5F5DC]', 'bg-[#000000]'] },
+const MOOD_OPTIONS = [
+  { id: 'cozy', label: 'Cozy & Comfortable', emoji: '🧸', description: 'I want my room to feel warm and inviting' },
+  { id: 'productive', label: 'Focused & Clean', emoji: '📚', description: 'I need a space that helps me concentrate' },
+  { id: 'creative', label: 'Inspired & Artistic', emoji: '🎨', description: 'I want my walls to spark creativity' },
+  { id: 'social', label: 'Fun & Social', emoji: '🎮', description: 'I love hosting friends in my space' },
+  { id: 'calm', label: 'Peaceful & Minimal', emoji: '🧘', description: 'I need a calm retreat to unwind' },
+  { id: 'energetic', label: 'Vibrant & Bold', emoji: '⚡', description: 'I want energy to flow through my room' },
 ];
 
-const PRIORITIES = [
-  'Perfect study space', 'Cozy sleep zone', 'Social hangout spot', 'All of the above'
+const WEEKEND_OPTIONS = [
+  { id: 'studying', label: 'Studying & Learning', icon: '📖' },
+  { id: 'gaming', label: 'Gaming & Streaming', icon: '🎮' },
+  { id: 'friends', label: 'Hanging with Friends', icon: '👥' },
+  { id: 'creating', label: 'Creating & Making', icon: '✏️' },
+  { id: 'relaxing', label: 'Relaxing & Resting', icon: '🛋️' },
+  { id: 'outdoor', label: 'Outdoor & Active', icon: '🏃' },
+];
+
+const ORGANIZATION_LEVELS = [
+  { id: 'minimalist', label: 'I love clean surfaces', sublabel: 'Everything has its place' },
+  { id: 'balanced', label: 'Some items out, some stored', sublabel: 'Organized but lived-in' },
+  { id: 'maximalist', label: 'Display everything I love', sublabel: 'My items tell my story' },
+];
+
+const TIME_SPENT_OPTIONS = [
+  { id: 'rarely', label: 'Just for sleeping', hours: '< 4 hrs/day' },
+  { id: 'sometimes', label: 'Study & relax here', hours: '4-8 hrs/day' },
+  { id: 'often', label: 'My main hangout spot', hours: '8-12 hrs/day' },
+  { id: 'always', label: 'Home office + bedroom', hours: '12+ hrs/day' },
+];
+
+const PERSONALITY_TRAITS = [
+  { id: 'introvert', label: 'Introvert', description: 'I recharge by being alone' },
+  { id: 'extrovert', label: 'Extrovert', description: 'Energy comes from social time' },
+  { id: 'ambivert', label: 'Ambivert', description: 'I need both solitude and company' },
 ];
 
 const VibeQuiz: React.FC = () => {
   const navigate = useNavigate();
   const setQuizData = useStore((state) => state.setQuizData);
+  
+  const [currentSection, setCurrentSection] = useState(0);
   const [formData, setFormData] = useState({
+    mood: '',
+    weekendActivity: '',
+    organization: '',
+    timeSpent: '',
+    personality: '',
     interests: [] as string[],
-    colorPalette: '',
     budget: 200,
     isInternational: false,
     country: '',
-    priority: '',
   });
+
+  const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const toggleInterest = (interest: string) => {
     setFormData((prev) => ({
@@ -45,12 +76,120 @@ const VibeQuiz: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.interests.length === 0 || !formData.colorPalette || !formData.priority) {
-      alert('Please fill out all sections!');
-      return;
-    }
-    setQuizData(formData);
+    
+    const algorithmResult = calculateVibeAlgorithm(formData);
+    
+    setQuizData({
+      ...formData,
+      colorPalette: algorithmResult.colorPalette,
+      priority: algorithmResult.theme,
+      interests: formData.interests,
+    });
     navigate('/loading');
+  };
+
+  const calculateVibeAlgorithm = (data: typeof formData) => {
+    let theme = 'Cozy Corner';
+    let colorPalette = 'Soft Pastels';
+    
+    const scores = {
+      cozy: 0,
+      productive: 0,
+      creative: 0,
+      social: 0,
+      calm: 0,
+      energetic: 0,
+    };
+
+    if (data.mood) scores[data.mood as keyof typeof scores] += 3;
+    if (data.weekendActivity === 'studying') scores.productive += 2;
+    if (data.weekendActivity === 'gaming') scores.social += 2;
+    if (data.weekendActivity === 'creating') scores.creative += 2;
+    if (data.weekendActivity === 'relaxing') scores.cozy += 2;
+    if (data.weekendActivity === 'friends') scores.social += 3;
+    if (data.organization === 'minimalist') scores.calm += 2;
+    if (data.organization === 'maximalist') scores.creative += 2;
+    if (data.organization === 'balanced') scores.cozy += 1;
+    if (data.timeSpent === 'always') scores.cozy += 2;
+    if (data.timeSpent === 'rarely') scores.productive += 1;
+    if (data.personality === 'introvert') scores.calm += 2;
+    if (data.personality === 'extrovert') scores.social += 2;
+    if (data.personality === 'ambivert') scores.cozy += 1;
+
+    if (data.interests.includes('Gaming')) scores.social += 1;
+    if (data.interests.includes('Minimalism')) scores.calm += 2;
+    if (data.interests.includes('Art')) scores.creative += 2;
+    if (data.interests.includes('Plants')) scores.cozy += 1;
+    if (data.interests.includes('Tech')) scores.productive += 1;
+
+    const maxScore = Math.max(...Object.values(scores));
+    const dominantVibe = Object.entries(scores).find(([, score]) => score === maxScore)?.[0];
+
+    const vibeThemes: Record<string, { theme: string; palette: string }> = {
+      cozy: { theme: 'Cozy Sanctuary', palette: 'Warm Earth' },
+      productive: { theme: 'Study Haven', palette: 'Neutral Minimal' },
+      creative: { theme: 'Artistic Studio', palette: 'Bright & Bold' },
+      social: { theme: 'Social Hub', palette: 'Cool Ocean' },
+      calm: { theme: 'Zen Retreat', palette: 'Soft Pastels' },
+      energetic: { theme: 'Energy Zone', palette: 'Dark & Moody' },
+    };
+
+    if (vibeThemes[dominantVibe]) {
+      theme = vibeThemes[dominantVibe].theme;
+      colorPalette = vibeThemes[dominantVibe].palette;
+    }
+
+    return { theme, colorPalette };
+  };
+
+  const sections = [
+    { title: 'How do you want your room to feel?', subtitle: 'Choose the mood that resonates with you' },
+    { title: 'What does your ideal weekend look like?', subtitle: 'This helps us understand your lifestyle' },
+    { title: 'How do you feel about clutter?', subtitle: 'Your organization style matters' },
+    { title: 'How much time do you spend in your room?', subtitle: 'This determines comfort needs' },
+    { title: 'Are you more introverted or extroverted?', subtitle: 'Your social battery type' },
+    { title: 'What are you into?', subtitle: 'Select all that apply' },
+    { title: "What's your budget?", subtitle: 'Set your spending limit' },
+    { title: 'Are you an international student?', subtitle: 'This helps us understand your needs better' },
+  ];
+
+  const isSectionComplete = (sectionIndex: number) => {
+    switch(sectionIndex) {
+      case 0: return !!formData.mood;
+      case 1: return !!formData.weekendActivity;
+      case 2: return !!formData.organization;
+      case 3: return !!formData.timeSpent;
+      case 4: return !!formData.personality;
+      case 5: return formData.interests.length > 0;
+      case 6: return formData.budget >= 50;
+      case 7: return !formData.isInternational || (formData.isInternational && formData.country.trim().length > 0);
+      default: return false;
+    }
+  };
+
+  const canProceed = isSectionComplete(currentSection);
+
+  const scrollToSection = (index: number) => {
+    const allSections = document.querySelectorAll('.quiz-section');
+    if (allSections[index]) {
+      allSections[index].scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const goToNext = () => {
+    if (canProceed && currentSection < sections.length - 1) {
+      const nextSection = currentSection + 1;
+      setCurrentSection(nextSection);
+      setTimeout(() => scrollToSection(nextSection), 100);
+    }
+  };
+
+  const goToPrevious = () => {
+    if (currentSection > 0) {
+      const prevSection = currentSection - 1;
+      setCurrentSection(prevSection);
+      setTimeout(() => scrollToSection(prevSection), 100);
+    }
   };
 
   return (
@@ -74,139 +213,251 @@ const VibeQuiz: React.FC = () => {
         </motion.div>
       </section>
 
-      {/* Interests Section */}
-      <section className="h-screen snap-start flex flex-col items-center justify-center p-6">
-        <h2 className="text-3xl font-bold mb-8">What are you into?</h2>
-        <div className="flex flex-wrap justify-center gap-3 max-w-4xl">
-          {INTERESTS.map((interest) => (
-            <button
-              key={interest}
-              onClick={() => toggleInterest(interest)}
-              className={`px-6 py-3 rounded-full border transition-all duration-300 ${
-                formData.interests.includes(interest)
-                  ? 'bg-teal-500 border-teal-500 text-black font-bold'
-                  : 'border-zinc-700 hover:border-teal-500 text-zinc-400'
-              }`}
-            >
-              {interest}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* Color Vibe Section */}
-      <section className="h-screen snap-start flex flex-col items-center justify-center p-6">
-        <h2 className="text-3xl font-bold mb-8">Pick your color vibe</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl w-full">
-          {COLOR_PALETTES.map((palette) => (
-            <button
-              key={palette.name}
-              onClick={() => setFormData({ ...formData, colorPalette: palette.name })}
-              className={`p-4 rounded-2xl border transition-all duration-300 group ${
-                formData.colorPalette === palette.name
-                  ? 'border-teal-500 bg-teal-500/10'
-                  : 'border-zinc-800 hover:border-zinc-600 bg-zinc-900'
-              }`}
-            >
-              <div className="flex gap-2 mb-3">
-                {palette.colors.map((color, idx) => (
-                  <div key={idx} className={`w-full h-8 rounded-md ${color}`} />
-                ))}
+      {/* Survey Sections */}
+      <div>
+        {sections.map((section, index) => (
+          <section 
+            key={index} 
+            ref={(el) => { sectionRefs.current[index] = el; }}
+            className="h-screen snap-start flex flex-col items-center justify-center p-6 quiz-section"
+          >
+            <div className="max-w-3xl w-full">
+              <div className="text-center mb-8">
+                <span className="text-teal-400 text-sm font-medium">Question {index + 1} of {sections.length}</span>
+                <h2 className="text-3xl md:text-4xl font-bold mt-2">{section.title}</h2>
+                <p className="text-zinc-400 mt-2">{section.subtitle}</p>
               </div>
-              <span className={`font-medium ${formData.colorPalette === palette.name ? 'text-teal-400' : 'text-zinc-400'}`}>
-                {palette.name}
-              </span>
-            </button>
-          ))}
-        </div>
-      </section>
 
-      {/* Budget & Student Status Section */}
-      <section className="h-screen snap-start flex flex-col items-center justify-center p-6 max-w-4xl mx-auto w-full">
-        <div className="w-full space-y-16">
-          <div className="space-y-6">
-            <h2 className="text-3xl font-bold text-center">What's your budget?</h2>
-            <div className="px-4">
-              <input
-                type="range"
-                min="50"
-                max="500"
-                step="10"
-                value={formData.budget}
-                onChange={(e) => setFormData({ ...formData, budget: parseInt(e.target.value) })}
-                className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-teal-500"
-              />
-              <div className="flex justify-between mt-4 text-zinc-500 font-medium">
-                <span>$50</span>
-                <span className="text-teal-400 text-xl font-bold">${formData.budget}</span>
-                <span>$500</span>
+              <div className="mt-8">
+                {index === 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {MOOD_OPTIONS.map((mood) => (
+                      <button
+                        key={mood.id}
+                        onClick={() => setFormData({ ...formData, mood: mood.id })}
+                        className={`p-4 rounded-2xl border transition-all text-left ${
+                          formData.mood === mood.id
+                            ? 'border-teal-500 bg-teal-500/10'
+                            : 'border-zinc-800 hover:border-zinc-600 bg-zinc-900'
+                        }`}
+                      >
+                        <span className="text-3xl block mb-2">{mood.emoji}</span>
+                        <span className={`font-medium ${formData.mood === mood.id ? 'text-teal-400' : 'text-zinc-300'}`}>
+                          {mood.label}
+                        </span>
+                        <p className="text-xs text-zinc-500 mt-1">{mood.description}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {index === 1 && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {WEEKEND_OPTIONS.map((option) => (
+                      <button
+                        key={option.id}
+                        onClick={() => setFormData({ ...formData, weekendActivity: option.id })}
+                        className={`p-6 rounded-2xl border transition-all text-center ${
+                          formData.weekendActivity === option.id
+                            ? 'border-teal-500 bg-teal-500/10'
+                            : 'border-zinc-800 hover:border-zinc-600 bg-zinc-900'
+                        }`}
+                      >
+                        <span className="text-4xl block mb-3">{option.icon}</span>
+                        <span className={`font-medium ${formData.weekendActivity === option.id ? 'text-teal-400' : 'text-zinc-300'}`}>
+                          {option.label}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {index === 2 && (
+                  <div className="space-y-4">
+                    {ORGANIZATION_LEVELS.map((level) => (
+                      <button
+                        key={level.id}
+                        onClick={() => setFormData({ ...formData, organization: level.id })}
+                        className={`w-full p-6 rounded-2xl border transition-all text-left ${
+                          formData.organization === level.id
+                            ? 'border-teal-500 bg-teal-500/10'
+                            : 'border-zinc-800 hover:border-zinc-600 bg-zinc-900'
+                        }`}
+                      >
+                        <span className={`text-lg font-medium ${formData.organization === level.id ? 'text-teal-400' : 'text-zinc-300'}`}>
+                          {level.label}
+                        </span>
+                        <p className="text-sm text-zinc-500 mt-1">{level.sublabel}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {index === 3 && (
+                  <div className="space-y-4">
+                    {TIME_SPENT_OPTIONS.map((option) => (
+                      <button
+                        key={option.id}
+                        onClick={() => setFormData({ ...formData, timeSpent: option.id })}
+                        className={`w-full p-6 rounded-2xl border transition-all text-left flex items-center justify-between ${
+                          formData.timeSpent === option.id
+                            ? 'border-teal-500 bg-teal-500/10'
+                            : 'border-zinc-800 hover:border-zinc-600 bg-zinc-900'
+                        }`}
+                      >
+                        <span className={`text-lg font-medium ${formData.timeSpent === option.id ? 'text-teal-400' : 'text-zinc-300'}`}>
+                          {option.label}
+                        </span>
+                        <span className="text-zinc-500 text-sm">{option.hours}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {index === 4 && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {PERSONALITY_TRAITS.map((trait) => (
+                      <button
+                        key={trait.id}
+                        onClick={() => setFormData({ ...formData, personality: trait.id })}
+                        className={`p-6 rounded-2xl border transition-all text-center ${
+                          formData.personality === trait.id
+                            ? 'border-teal-500 bg-teal-500/10'
+                            : 'border-zinc-800 hover:border-zinc-600 bg-zinc-900'
+                        }`}
+                      >
+                        <span className={`text-xl font-bold block mb-2 ${formData.personality === trait.id ? 'text-teal-400' : 'text-zinc-300'}`}>
+                          {trait.label}
+                        </span>
+                        <p className="text-sm text-zinc-500">{trait.description}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {index === 5 && (
+                  <div className="flex flex-wrap justify-center gap-3">
+                    {INTERESTS.map((interest) => (
+                      <button
+                        key={interest}
+                        onClick={() => toggleInterest(interest)}
+                        className={`px-6 py-3 rounded-full border transition-all duration-300 ${
+                          formData.interests.includes(interest)
+                            ? 'bg-teal-500 border-teal-500 text-black font-bold'
+                            : 'border-zinc-700 hover:border-teal-500 text-zinc-400'
+                        }`}
+                      >
+                        {interest}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {index === 6 && (
+                  <div className="px-8">
+                    <input
+                      type="range"
+                      min="50"
+                      max="500"
+                      step="10"
+                      value={formData.budget}
+                      onChange={(e) => setFormData({ ...formData, budget: parseInt(e.target.value) })}
+                      className="w-full h-3 bg-zinc-800 rounded-lg appearance-none cursor-grab active:cursor-grabbing accent-teal-500"
+                      style={{
+                        background: `linear-gradient(to right, #14b8a6 0%, #14b8a6 ${((formData.budget - 50) / 450) * 100}%, #3f3f46 ${((formData.budget - 50) / 450) * 100}%, #3f3f46 100%)`
+                      }}
+                    />
+                    <div className="flex justify-between mt-6 text-zinc-500 font-medium">
+                      <span>$50</span>
+                      <span className="text-teal-400 text-2xl font-bold">${formData.budget}</span>
+                      <span>$500</span>
+                    </div>
+                  </div>
+                )}
+
+                {index === 7 && (
+                  <div className="space-y-6">
+                    <div className="flex gap-4 justify-center">
+                      <button
+                        onClick={() => setFormData({ ...formData, isInternational: true })}
+                        className={`px-8 py-4 rounded-xl border transition-all ${
+                          formData.isInternational ? 'bg-teal-500 border-teal-500 text-black' : 'border-zinc-800 text-zinc-400 hover:border-zinc-600'
+                        }`}
+                      >
+                        Yes
+                      </button>
+                      <button
+                        onClick={() => setFormData({ ...formData, isInternational: false, country: '' })}
+                        className={`px-8 py-4 rounded-xl border transition-all ${
+                          formData.isInternational === false ? 'bg-teal-500 border-teal-500 text-black' : 'border-zinc-800 text-zinc-400 hover:border-zinc-600'
+                        }`}
+                      >
+                        No
+                      </button>
+                    </div>
+                    {formData.isInternational && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        className="flex justify-center"
+                      >
+                        <input
+                          type="text"
+                          placeholder="Where are you coming from?"
+                          value={formData.country}
+                          onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                          className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-xl px-6 py-4 focus:outline-none focus:border-teal-500 text-white"
+                        />
+                      </motion.div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Navigation */}
+              <div className="flex justify-between mt-12">
+                <button
+                  onClick={goToPrevious}
+                  disabled={currentSection === 0}
+                  className={`px-6 py-3 rounded-xl font-medium transition-all ${
+                    currentSection === 0
+                      ? 'text-zinc-600 cursor-not-allowed'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  ← Previous
+                </button>
+                
+                {currentSection < sections.length - 1 ? (
+                  <button
+                    onClick={goToNext}
+                    disabled={!canProceed}
+                    className={`px-8 py-3 rounded-xl font-bold transition-all ${
+                      canProceed
+                        ? 'bg-teal-500 text-black hover:bg-teal-400'
+                        : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                    }`}
+                  >
+                    Next →
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleSubmit}
+                    disabled={!canProceed}
+                    className={`px-8 py-3 rounded-xl font-bold transition-all flex items-center gap-2 ${
+                      canProceed
+                        ? 'bg-teal-500 text-black hover:bg-teal-400 shadow-[0_0_40px_rgba(45,212,191,0.3)]'
+                        : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                    }`}
+                  >
+                    Generate My DormVibe <Sparkles className="w-5 h-5" />
+                  </button>
+                )}
               </div>
             </div>
-          </div>
-
-          <div className="space-y-6 flex flex-col items-center">
-            <h2 className="text-3xl font-bold">Are you an international student?</h2>
-            <div className="flex gap-4">
-              <button
-                onClick={() => setFormData({ ...formData, isInternational: true })}
-                className={`px-8 py-4 rounded-xl border transition-all ${
-                  formData.isInternational ? 'bg-teal-500 border-teal-500 text-black' : 'border-zinc-800 text-zinc-400'
-                }`}
-              >
-                Yes
-              </button>
-              <button
-                onClick={() => setFormData({ ...formData, isInternational: false, country: '' })}
-                className={`px-8 py-4 rounded-xl border transition-all ${
-                  !formData.isInternational ? 'bg-teal-500 border-teal-500 text-black' : 'border-zinc-800 text-zinc-400'
-                }`}
-              >
-                No
-              </button>
-            </div>
-            {formData.isInternational && (
-              <motion.input
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                type="text"
-                placeholder="Where are you coming from?"
-                value={formData.country}
-                onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-xl px-6 py-4 mt-4 focus:outline-none focus:border-teal-500"
-              />
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Priority & Final Submit */}
-      <section className="h-screen snap-start flex flex-col items-center justify-center p-6">
-        <h2 className="text-3xl font-bold mb-12">What matters most?</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl w-full mb-16">
-          {PRIORITIES.map((p) => (
-            <button
-              key={p}
-              onClick={() => setFormData({ ...formData, priority: p })}
-              className={`p-6 rounded-2xl border transition-all text-left text-lg ${
-                formData.priority === p
-                  ? 'border-teal-500 bg-teal-500/10 text-teal-400'
-                  : 'border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-zinc-600'
-              }`}
-            >
-              {p}
-            </button>
-          ))}
-        </div>
-
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={handleSubmit}
-          className="bg-teal-500 text-black font-black text-xl px-12 py-6 rounded-2xl flex items-center gap-3 shadow-[0_0_40px_rgba(45,212,191,0.3)] hover:shadow-[0_0_60px_rgba(45,212,191,0.5)] transition-all"
-        >
-          Generate My DormVibe <Sparkles className="w-6 h-6" />
-        </motion.button>
-      </section>
+          </section>
+        ))}
+      </div>
     </div>
   );
 };
