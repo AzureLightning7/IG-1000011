@@ -10,6 +10,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
 import generateRoutes from './routes/generate.js';
 import generateTTSRoutes from './routes/generateTTS.js';
+import identifyProductsRoutes from './routes/identifyProducts.js';
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.get('/api/health', (_req: Request, res: Response) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/generate', generateRoutes);
 app.use('/api/generate-tts', generateTTSRoutes);
+app.use('/api/identify-products', identifyProductsRoutes);
 
 app.use(
   '/generated',

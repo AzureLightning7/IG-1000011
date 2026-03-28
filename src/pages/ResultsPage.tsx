@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { motion } from 'framer-motion';
 import { RefreshCw, Share2 } from 'lucide-react';
-import MoodBoard from '../components/MoodBoard';
+import InteractiveRoomDisplay from '../components/InteractiveRoomDisplay';
 import AudioPlayer from '../components/AudioPlayer';
 import ShoppingList from '../components/ShoppingList';
 
@@ -42,10 +42,14 @@ const ResultsPage: React.FC = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 space-y-24">
-        {/* Mood Board */}
+        {/* Interactive Room Display */}
         <section>
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">🖼️ Mood Board</h2>
-          <MoodBoard imageUrl={mediaContent.imageUrl} vibeName={generatedContent.vibeName} />
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">🖼️ Interactive Room</h2>
+          <InteractiveRoomDisplay 
+            imageUrl={mediaContent.imageUrl} 
+            vibeName={generatedContent.vibeName} 
+            products={generatedContent.products} 
+          />
         </section>
 
         {/* Vibe Guide & Audio */}
