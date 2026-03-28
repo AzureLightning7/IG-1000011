@@ -40,9 +40,14 @@ const LoadingScreen: React.FC = () => {
           buffer = lines.pop() || '';
 
           for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const payload = JSON.parse(line.replace('data: ', ''));
-              handleUpdate(payload);
+            const trimmedLine = line.trim();
+            if (trimmedLine.startsWith('data: ') && !trimmedLine.startsWith('data: :')) {
+              try {
+                const payload = JSON.parse(trimmedLine.replace('data: ', ''));
+                handleUpdate(payload);
+              } catch (parseError) {
+                console.warn('Failed to parse SSE line:', trimmedLine.substring(0, 100));
+              }
             }
           }
         }
