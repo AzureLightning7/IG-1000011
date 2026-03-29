@@ -2,6 +2,7 @@ import axios from 'axios';
 import fs from 'fs/promises';
 import path from 'path';
 import { minimaxClient } from './minimaxClient.js';
+import { MINIMAX_PROMPTS } from './minimaxPrompts.js';
 
 export const customizeImage = async (
   originalImageUrl: string,
@@ -11,7 +12,7 @@ export const customizeImage = async (
 ): Promise<string> => {
   const client = minimaxClient();
   
-  const enhancedPrompt = `${basePrompt}\n\nCustomization request: ${customizationPrompt}\n\nIMPORTANT: The original image is of a room. Preserve the original room layout, furniture placement, and overall style while implementing the specific customization request. Your output image must be at least 90% similar to the original image.`;
+  const enhancedPrompt = MINIMAX_PROMPTS.image.customization(basePrompt, customizationPrompt);
 
   const response = await client.post(
     '/image_generation',
