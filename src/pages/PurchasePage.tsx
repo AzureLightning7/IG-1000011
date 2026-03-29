@@ -2,15 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { motion } from 'framer-motion';
-import { ArrowLeft, RefreshCw, ShoppingBag, Truck, Package, Heart } from 'lucide-react';
-import AudioPlayer from '../components/AudioPlayer';
+import { ArrowLeft, RefreshCw, ShoppingBag, Truck, Package, Heart, Sparkles } from 'lucide-react';
 import ShoppingList from '../components/ShoppingList';
+import RoomShoppingDisplay from '../components/RoomShoppingDisplay';
 import { toast } from 'sonner';
 
 const PurchasePage: React.FC = () => {
   const navigate = useNavigate();
-  const { generatedContent, mediaContent, reset, cartItems } = useStore();
+  const { generatedContent, mediaContent, reset, cartItems, customImageUrl } = useStore();
   const [activeTab, setActiveTab] = useState<'essentials' | 'marketplace' | 'freecycling'>('essentials');
+  const [showRoomView, setShowRoomView] = useState(false);
+  
+  const roomImageUrl = customImageUrl || mediaContent.imageUrl || '';
 
   useEffect(() => {
     if (!generatedContent) {
@@ -51,144 +54,158 @@ const PurchasePage: React.FC = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 space-y-24">
-        {/* Audio Guide */}
-        <section>
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">🎧 Audio Guide</h2>
-          <AudioPlayer audioUrl={mediaContent.audioUrl} label="Shopping Guide" />
-        </section>
+        {/* 3D Room Display or Shopping Tabs */}
+        {showRoomView ? (
+          <RoomShoppingDisplay
+            roomImageUrl={roomImageUrl}
+            products={generatedContent.products}
+            vibeName={generatedContent.vibeName}
+            onBack={() => setShowRoomView(false)}
+          />
+        ) : (
+          <section>
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-2xl font-bold flex items-center gap-2">🛒 Shopping Options</h2>
+              <button
+                onClick={() => setShowRoomView(true)}
+                className="flex items-center gap-2 px-6 py-3 bg-teal-500 text-black rounded-xl font-bold hover:bg-teal-400 transition-all shadow-[0_0_30px_rgba(45,212,191,0.2)]"
+              >
+                <Sparkles className="w-5 h-5" />
+                Shop This Room
+              </button>
+            </div>
 
-        {/* Shopping Tabs */}
-        <section>
-          <div className="flex flex-wrap gap-4 mb-8">
-            <button
-              onClick={() => setActiveTab('essentials')}
-              className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'essentials' ? 'bg-teal-500 text-black' : 'bg-zinc-900 border border-zinc-800 text-zinc-300 hover:bg-zinc-800'}`}
-            >
-              <span className="flex items-center gap-2">
-                <ShoppingBag className="w-4 h-4" />
-                Essentials
-              </span>
-            </button>
-            <button
-              onClick={() => setActiveTab('marketplace')}
-              className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'marketplace' ? 'bg-teal-500 text-black' : 'bg-zinc-900 border border-zinc-800 text-zinc-300 hover:bg-zinc-800'}`}
-            >
-              <span className="flex items-center gap-2">
-                <Package className="w-4 h-4" />
-                Marketplace
-              </span>
-            </button>
-            <button
-              onClick={() => setActiveTab('freecycling')}
-              className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'freecycling' ? 'bg-teal-500 text-black' : 'bg-zinc-900 border border-zinc-800 text-zinc-300 hover:bg-zinc-800'}`}
-            >
-              <span className="flex items-center gap-2">
-                <Heart className="w-4 h-4" />
-                Freecycling
-              </span>
-            </button>
-          </div>
-
-          {/* Tab Content */}
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-3xl p-8">
-            {activeTab === 'essentials' && (
-              <div>
-                <h3 className="text-xl font-bold mb-6">Curated Shopping List</h3>
-                <ShoppingList products={generatedContent.products} />
+            <div className="bg-zinc-900/50 border border-zinc-800 rounded-3xl p-8">
+              <div className="flex flex-wrap gap-4 mb-8">
+                <button
+                  onClick={() => setActiveTab('essentials')}
+                  className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'essentials' ? 'bg-teal-500 text-black' : 'bg-zinc-900 border border-zinc-800 text-zinc-300 hover:bg-zinc-800'}`}
+                >
+                  <span className="flex items-center gap-2">
+                    <ShoppingBag className="w-4 h-4" />
+                    Essentials
+                  </span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('marketplace')}
+                  className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'marketplace' ? 'bg-teal-500 text-black' : 'bg-zinc-900 border border-zinc-800 text-zinc-300 hover:bg-zinc-800'}`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Package className="w-4 h-4" />
+                    Marketplace
+                  </span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('freecycling')}
+                  className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'freecycling' ? 'bg-teal-500 text-black' : 'bg-zinc-900 border border-zinc-800 text-zinc-300 hover:bg-zinc-800'}`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Heart className="w-4 h-4" />
+                    Freecycling
+                  </span>
+                </button>
               </div>
-            )}
 
-            {activeTab === 'marketplace' && (
-              <div className="space-y-6">
-                <h3 className="text-xl font-bold">Campus Marketplace</h3>
-                <p className="text-zinc-400">Buy and sell items with other students on campus</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <div className="bg-zinc-800 rounded-2xl p-6 text-center">
-                    <Package className="w-12 h-12 mx-auto text-teal-400 mb-4" />
-                    <h4 className="font-bold mb-2">Buy From Students</h4>
-                    <p className="text-zinc-500 text-sm mb-4">Browse unique items from other students</p>
-                    <button 
-                      onClick={() => {
-                        const marketplaceBtn = document.querySelector('[data-marketplace-btn]') as HTMLButtonElement;
-                        if (marketplaceBtn) marketplaceBtn.click();
-                      }}
-                      className="px-4 py-2 bg-teal-500 text-black rounded-lg font-bold text-sm hover:bg-teal-400"
-                    >
-                      Open Marketplace
-                    </button>
-                  </div>
-                  <div className="bg-zinc-800 rounded-2xl p-6 text-center">
-                    <Package className="w-12 h-12 mx-auto text-teal-400 mb-4" />
-                    <h4 className="font-bold mb-2">Sell Your Items</h4>
-                    <p className="text-zinc-500 text-sm mb-4">List your gently used dorm items for sale</p>
-                    <button 
-                      onClick={() => {
-                        const marketplaceBtn = document.querySelector('[data-marketplace-btn]') as HTMLButtonElement;
-                        if (marketplaceBtn) marketplaceBtn.click();
-                      }}
-                      className="px-4 py-2 bg-teal-500 text-black rounded-lg font-bold text-sm hover:bg-teal-400"
-                    >
-                      Sell Item
-                    </button>
-                  </div>
-                  <div className="bg-zinc-800 rounded-2xl p-6 text-center">
-                    <Package className="w-12 h-12 mx-auto text-teal-400 mb-4" />
-                    <h4 className="font-bold mb-2">Local Pickup</h4>
-                    <p className="text-zinc-500 text-sm">Easy pickup options on campus</p>
-                  </div>
+              {/* Tab Content */}
+              {activeTab === 'essentials' && (
+                <div>
+                  <h3 className="text-xl font-bold mb-6">Curated Shopping List</h3>
+                  <ShoppingList products={generatedContent.products} />
                 </div>
-                <p className="text-zinc-500 text-sm text-center">
-                  💡 Tip: Click the floating "Marketplace" button in the bottom right corner to browse & sell items!
-                </p>
-              </div>
-            )}
+              )}
 
-            {activeTab === 'freecycling' && (
-              <div className="space-y-6">
-                <h3 className="text-xl font-bold">Freecycling</h3>
-                <p className="text-zinc-400">Find free items from students moving out</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <div className="bg-zinc-800 rounded-2xl p-6 text-center">
-                    <Heart className="w-12 h-12 mx-auto text-teal-400 mb-4" />
-                    <h4 className="font-bold mb-2">Get Free Items</h4>
-                    <p className="text-zinc-500 text-sm mb-4">Browse items students are giving away</p>
-                    <button 
-                      onClick={() => {
-                        const marketplaceBtn = document.querySelector('[data-marketplace-btn]') as HTMLButtonElement;
-                        if (marketplaceBtn) marketplaceBtn.click();
-                      }}
-                      className="px-4 py-2 bg-green-500 text-black rounded-lg font-bold text-sm hover:bg-green-400"
-                    >
-                      Browse Free Items
-                    </button>
+              {activeTab === 'marketplace' && (
+                <div className="space-y-6">
+                  <h3 className="text-xl font-bold">Campus Marketplace</h3>
+                  <p className="text-zinc-400">Buy and sell items with other students on campus</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="bg-zinc-800 rounded-2xl p-6 text-center">
+                      <Package className="w-12 h-12 mx-auto text-teal-400 mb-4" />
+                      <h4 className="font-bold mb-2">Buy From Students</h4>
+                      <p className="text-zinc-500 text-sm mb-4">Browse unique items from other students</p>
+                      <button 
+                        onClick={() => {
+                          const marketplaceBtn = document.querySelector('[data-marketplace-btn]') as HTMLButtonElement;
+                          if (marketplaceBtn) marketplaceBtn.click();
+                        }}
+                        className="px-4 py-2 bg-teal-500 text-black rounded-lg font-bold text-sm hover:bg-teal-400"
+                      >
+                        Open Marketplace
+                      </button>
+                    </div>
+                    <div className="bg-zinc-800 rounded-2xl p-6 text-center">
+                      <Package className="w-12 h-12 mx-auto text-teal-400 mb-4" />
+                      <h4 className="font-bold mb-2">Sell Your Items</h4>
+                      <p className="text-zinc-500 text-sm mb-4">List your gently used dorm items for sale</p>
+                      <button 
+                        onClick={() => {
+                          const marketplaceBtn = document.querySelector('[data-marketplace-btn]') as HTMLButtonElement;
+                          if (marketplaceBtn) marketplaceBtn.click();
+                        }}
+                        className="px-4 py-2 bg-teal-500 text-black rounded-lg font-bold text-sm hover:bg-teal-400"
+                      >
+                        Sell Item
+                      </button>
+                    </div>
+                    <div className="bg-zinc-800 rounded-2xl p-6 text-center">
+                      <Package className="w-12 h-12 mx-auto text-teal-400 mb-4" />
+                      <h4 className="font-bold mb-2">Local Pickup</h4>
+                      <p className="text-zinc-500 text-sm">Easy pickup options on campus</p>
+                    </div>
                   </div>
-                  <div className="bg-zinc-800 rounded-2xl p-6 text-center">
-                    <Heart className="w-12 h-12 mx-auto text-teal-400 mb-4" />
-                    <h4 className="font-bold mb-2">Give Away</h4>
-                    <p className="text-zinc-500 text-sm mb-4">List items you no longer need</p>
-                    <button 
-                      onClick={() => {
-                        const marketplaceBtn = document.querySelector('[data-marketplace-btn]') as HTMLButtonElement;
-                        if (marketplaceBtn) marketplaceBtn.click();
-                      }}
-                      className="px-4 py-2 bg-green-500 text-black rounded-lg font-bold text-sm hover:bg-green-400"
-                    >
-                      List for Free
-                    </button>
-                  </div>
-                  <div className="bg-zinc-800 rounded-2xl p-6 text-center">
-                    <Heart className="w-12 h-12 mx-auto text-teal-400 mb-4" />
-                    <h4 className="font-bold mb-2">Sustainable</h4>
-                    <p className="text-zinc-500 text-sm">Reduce waste and help the environment</p>
-                  </div>
+                  <p className="text-zinc-500 text-sm text-center">
+                    💡 Tip: Click the floating "Marketplace" button in the bottom right corner to browse & sell items!
+                  </p>
                 </div>
-                <p className="text-zinc-500 text-sm text-center">
-                  💡 Tip: Click the floating "Marketplace" button in the bottom right corner, then switch to "Recycle (Free)" tab!
-                </p>
-              </div>
-            )}
-          </div>
-        </section>
+              )}
+
+              {activeTab === 'freecycling' && (
+                <div className="space-y-6">
+                  <h3 className="text-xl font-bold">Freecycling</h3>
+                  <p className="text-zinc-400">Find free items from students moving out</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="bg-zinc-800 rounded-2xl p-6 text-center">
+                      <Heart className="w-12 h-12 mx-auto text-teal-400 mb-4" />
+                      <h4 className="font-bold mb-2">Get Free Items</h4>
+                      <p className="text-zinc-500 text-sm mb-4">Browse items students are giving away</p>
+                      <button 
+                        onClick={() => {
+                          const marketplaceBtn = document.querySelector('[data-marketplace-btn]') as HTMLButtonElement;
+                          if (marketplaceBtn) marketplaceBtn.click();
+                        }}
+                        className="px-4 py-2 bg-green-500 text-black rounded-lg font-bold text-sm hover:bg-green-400"
+                      >
+                        Browse Free Items
+                      </button>
+                    </div>
+                    <div className="bg-zinc-800 rounded-2xl p-6 text-center">
+                      <Heart className="w-12 h-12 mx-auto text-teal-400 mb-4" />
+                      <h4 className="font-bold mb-2">Give Away</h4>
+                      <p className="text-zinc-500 text-sm mb-4">List items you no longer need</p>
+                      <button 
+                        onClick={() => {
+                          const marketplaceBtn = document.querySelector('[data-marketplace-btn]') as HTMLButtonElement;
+                          if (marketplaceBtn) marketplaceBtn.click();
+                        }}
+                        className="px-4 py-2 bg-green-500 text-black rounded-lg font-bold text-sm hover:bg-green-400"
+                      >
+                        List for Free
+                      </button>
+                    </div>
+                    <div className="bg-zinc-800 rounded-2xl p-6 text-center">
+                      <Heart className="w-12 h-12 mx-auto text-teal-400 mb-4" />
+                      <h4 className="font-bold mb-2">Sustainable</h4>
+                      <p className="text-zinc-500 text-sm">Reduce waste and help the environment</p>
+                    </div>
+                  </div>
+                  <p className="text-zinc-500 text-sm text-center">
+                    💡 Tip: Click the floating "Marketplace" button in the bottom right corner, then switch to "Recycle (Free)" tab!
+                  </p>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* Cart Summary */}
         {cartItems.length > 0 && (

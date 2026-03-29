@@ -2,6 +2,289 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 3D Room Shopping Display Styles */
+.room-display-wrapper {
+  min-height: 100vh;
+  background: #0a0a0a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  padding: 2rem;
+}
+
+.room-display-wrapper header {
+  text-align: center;
+  margin-bottom: 3rem;
+  width: 100%;
+  max-width: 900px;
+}
+
+.room-display-wrapper header .back-btn {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  background: none;
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.room-display-wrapper header .back-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.room-display-wrapper header h2 {
+  color: white;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.room-display-wrapper header p {
+  color: #9ca3af;
+  font-size: 1.1rem;
+}
+
+.room-scene {
+  perspective: 1200px;
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+}
+
+.room-box {
+  transform-style: preserve-3d;
+  transition: transform 0.1s ease-out;
+  position: relative;
+  width: 100%;
+}
+
+.room-image {
+  position: relative;
+  width: 100%;
+  border-radius: 16px;
+  overflow: visible;
+  box-shadow:
+    0 25px 60px rgba(0, 0, 0, 0.5),
+    0 0 120px rgba(45, 212, 191, 0.08);
+}
+
+.room-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 16px;
+}
+
+.hotspot-marker {
+  position: absolute;
+  z-index: 10;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  transform: translate(-50%, -50%) translateZ(30px);
+}
+
+.hotspot-ping {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid rgba(45, 212, 191, 0.6);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes ping {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  75%, 100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
+}
+
+.hotspot-dot {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #2dd4bf;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 8px rgba(45, 212, 191, 0.5);
+  position: relative;
+  z-index: 2;
+  transition: transform 0.2s;
+}
+
+.hotspot-marker:hover .hotspot-dot {
+  transform: scale(1.3);
+}
+
+.hotspot-marker.active .hotspot-dot {
+  background: #ffffff;
+  border-color: #2dd4bf;
+}
+
+.hotspot-label {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.hotspot-marker:hover .hotspot-label {
+  opacity: 1;
+}
+
+.product-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #1a1a1a;
+  border-top: 1px solid #2a2a2a;
+  border-radius: 20px 20px 0 0;
+  padding: 24px;
+  z-index: 50;
+  animation: slideUp 0.3s ease-out;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: #2a2a2a;
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-category {
+  display: inline-block;
+  background: rgba(45, 212, 191, 0.15);
+  color: #2dd4bf;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-bottom: 8px;
+}
+
+.product-info h3 {
+  color: white;
+  font-size: 20px;
+  font-weight: 600;
+  margin: 4px 0;
+}
+
+.product-price {
+  color: #9ca3af;
+  font-size: 16px;
+  margin-bottom: 16px;
+}
+
+.product-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.shop-btn {
+  flex: 1;
+  min-width: 120px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.shop-btn:hover { opacity: 0.85; }
+
+.shop-btn.amazon {
+  background: #ff9900;
+  color: #000;
+}
+
+.shop-btn.ikea {
+  background: #0058a3;
+  color: #fff;
+}
+
+.shop-btn.taobao {
+  background: #ff4400;
+  color: #fff;
+}
+
+@media (max-width: 768px) {
+  .room-scene {
+    perspective: none;
+  }
+
+  .room-box {
+    transform: none !important;
+    transform-style: flat;
+  }
+
+  .hotspot-marker {
+    transform: translate(-50%, -50%);
+  }
+
+  .room-display-wrapper header h2 {
+    font-size: 2rem;
+  }
+
+  .room-display-wrapper header .back-btn {
+    top: 1rem;
+    left: 1rem;
+  }
+
+  .product-actions {
+    flex-direction: column;
+  }
+
+  .shop-btn {
+    width: 100%;
+  }
+}
+
+
 :root {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
   line-height: 1.5;
