@@ -21,11 +21,19 @@ export const customizeImage = async (
       prompt: enhancedPrompt,
       aspect_ratio: '16:9',
       n: 1,
-      prompt_optimizer: true,
+      prompt_optimizer: false,
     }
   );
 
   const body = response.data;
+  console.log('Image generation response:', JSON.stringify(body, null, 2));
+  console.log('Response status:', response.status);
+  
+  // Check if there's an error in the response
+  if (body?.base_resp?.status_code && body.base_resp.status_code !== 0) {
+    throw new Error(body.base_resp.status_msg || 'Image generation failed');
+  }
+  
   const directUrl =
     body?.data?.image_urls?.[0] ??
     body?.data?.image_url ??

@@ -54,6 +54,9 @@ const parseJsonFromModelContent = (content: unknown) => {
   text = text.replace(/```(?:json)?/gi, '');
   text = text.replace(/```/g, '');
   text = text.trim();
+  
+  console.log('Processed content length:', text.length);
+  console.log('Content snippet around position 2421:', text.slice(Math.max(0, 2400), Math.min(text.length, 2450)));
 
   const tryParse = (candidate: string): unknown => {
     try {
@@ -63,8 +66,21 @@ const parseJsonFromModelContent = (content: unknown) => {
       
       let repaired = candidate;
       
+      // Fix common JSON issues
       repaired = repaired.replace(/,\s*}/g, '}');
       repaired = repaired.replace(/,\s*]/g, ']');
+      
+      // Fix missing commas between array elements
+      repaired = repaired.replace(/}("|\s)*\{/g, '},{');
+      
+      // Fix missing closing quotes
+      const quoteRegex = /"([^"]*?)(?=\s*[,\]\}])/g;
+      repaired = repaired.replace(quoteRegex, (match, content) => {
+        if (!content.endsWith('"')) {
+          return '"' + content + '"';
+        }
+        return match;
+      });
       
       const fixUnescapedQuotes = (str: string): string => {
         let result = '';
@@ -256,7 +272,17 @@ export const generateText = async (quizData: QuizData): Promise<GeneratedContent
     console.log('Content length:', typeof content === 'string' ? content.length : 'N/A');
     console.log('Content preview:', typeof content === 'string' ? content.slice(0, 200) : JSON.stringify(content).slice(0, 200));
     
-    return parseJsonFromModelContent(content) as GeneratedContent;
+    // Strip markdown code blocks if the model ignores instructions
+    let processedContent: unknown = content;
+    if (typeof content === 'string') {
+      let textContent = content.trim();
+      if (textContent.startsWith('```')) {
+        textContent = textContent.replace(/^```json?\n?/, '').replace(/\n?```$/, '');
+      }
+      processedContent = textContent;
+    }
+    
+    return parseJsonFromModelContent(processedContent) as GeneratedContent;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error('Error parsing MiniMax text generation response:', error);
