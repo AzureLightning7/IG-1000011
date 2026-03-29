@@ -1,7 +1,9 @@
-import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import VibeQuiz from "./pages/VibeQuiz";
 import LoadingScreen from "./pages/LoadingScreen";
-import ResultsPage from "./pages/ResultsPage";
+import CustomizationPage from "./pages/CustomizationPage";
+import PurchasePage from "./pages/PurchasePage";
+import StageNavigation from "./components/StageNavigation";
 import { useState, useRef, useEffect } from "react";
 import { ShoppingBag, X, ArrowLeft, CreditCard, Truck, Check, Trash2, Package, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -698,18 +700,28 @@ function MarketplaceButton() {
   );
 }
 
+function AppContent() {
+  const location = useLocation();
+  
+  return (
+    <div className="min-h-screen bg-[#0A0A0A] text-white selection:bg-teal-500/30">
+      <MarketplaceButton />
+      {location.pathname !== '/' && location.pathname !== '/loading' && <StageNavigation />}
+      <Routes>
+        <Route path="/" element={<VibeQuiz />} />
+        <Route path="/loading" element={<LoadingScreen />} />
+        <Route path="/customization" element={<CustomizationPage />} />
+        <Route path="/purchase" element={<PurchasePage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
+      </Routes>
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-[#0A0A0A] text-white selection:bg-teal-500/30">
-        <MarketplaceButton />
-        <Routes>
-          <Route path="/" element={<VibeQuiz />} />
-          <Route path="/loading" element={<LoadingScreen />} />
-          <Route path="/results" element={<ResultsPage />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
-        </Routes>
-      </div>
+      <AppContent />
     </Router>
   );
 }
