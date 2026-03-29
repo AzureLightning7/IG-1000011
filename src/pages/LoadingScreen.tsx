@@ -81,7 +81,7 @@ const LoadingScreen: React.FC = () => {
         setMediaContent({ imageUrl: data.url });
       } else if (step === 'Complete' && status === 'completed') {
         setIsGenerating(false);
-        setTimeout(() => navigate('/results'), 1500);
+        setTimeout(() => navigate('/customization'), 1500);
       }
     };
 
