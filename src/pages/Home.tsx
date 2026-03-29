@@ -2,6 +2,8 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Sparkles, ArrowRight, Home as HomeIcon, Users, ShoppingBag, Palette, Heart, Star } from 'lucide-react';
+import { useStore } from '../store/useStore';
+import { toast } from 'sonner';
 
 const FEATURES = [
   {
@@ -34,6 +36,16 @@ const STEPS = [
 
 export default function Home() {
   const navigate = useNavigate();
+  const { isLoggedIn, demoMode, user } = useStore();
+
+  const handleStartDesign = () => {
+    if (isLoggedIn || demoMode || user) {
+      navigate('/quiz');
+    } else {
+      toast.info('Please sign in to generate your personalized dorm vibe');
+      navigate('/login');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
@@ -44,18 +56,32 @@ export default function Home() {
             <span className="text-2xl font-bold">Dorm<span className="text-teal-400">Vibe</span></span>
           </div>
           <div className="flex items-center gap-6">
-            <button 
-              onClick={() => navigate('/login')}
-              className="text-zinc-300 hover:text-white transition-colors font-medium"
-            >
-              Sign In
-            </button>
-            <button 
-              onClick={() => navigate('/quiz')}
-              className="px-5 py-2 bg-teal-500 text-black rounded-full font-bold hover:bg-teal-400 transition-colors"
-            >
-              Get Started
-            </button>
+            {isLoggedIn && user ? (
+              <div className="flex items-center gap-4">
+                <span className="text-zinc-300">Welcome, {user.name}</span>
+                <button 
+                  onClick={() => navigate('/quiz')}
+                  className="px-5 py-2 bg-teal-500 text-black rounded-full font-bold hover:bg-teal-400 transition-colors"
+                >
+                  Go to Quiz
+                </button>
+              </div>
+            ) : (
+              <>
+                <button 
+                  onClick={() => navigate('/login')}
+                  className="text-zinc-300 hover:text-white transition-colors font-medium"
+                >
+                  Sign In
+                </button>
+                <button 
+                  onClick={handleStartDesign}
+                  className="px-5 py-2 bg-teal-500 text-black rounded-full font-bold hover:bg-teal-400 transition-colors"
+                >
+                  Get Started
+                </button>
+              </>
+            )}
           </div>
         </div>
       </nav>
@@ -82,7 +108,7 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <button 
-                onClick={() => navigate('/quiz')}
+                onClick={handleStartDesign}
                 className="px-8 py-4 bg-teal-500 text-black rounded-2xl font-bold text-lg hover:bg-teal-400 transition-all flex items-center gap-2"
               >
                 Start Designing <ArrowRight className="w-5 h-5" />
@@ -259,7 +285,7 @@ export default function Home() {
               Join thousands of students who designed their dream dorms
             </p>
             <button 
-              onClick={() => navigate('/quiz')}
+              onClick={handleStartDesign}
               className="px-8 py-4 bg-teal-500 text-black rounded-2xl font-bold text-lg hover:bg-teal-400 transition-all inline-flex items-center gap-2"
             >
               Get Started Free <ArrowRight className="w-5 h-5" />

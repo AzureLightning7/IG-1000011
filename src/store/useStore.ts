@@ -21,6 +21,13 @@ interface SellerItem {
   isFree: boolean;
 }
 
+interface User {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+}
+
 interface AppState {
   quizData: QuizData | null;
   generatedContent: GeneratedContent | null;
@@ -42,6 +49,9 @@ interface AppState {
   };
   isInternational: boolean;
   country: string;
+  user: User | null;
+  isLoggedIn: boolean;
+  demoMode: boolean;
   setQuizData: (data: QuizData) => void;
   setGeneratedContent: (content: GeneratedContent) => void;
   setMediaContent: (media: Partial<MediaContent>) => void;
@@ -55,6 +65,9 @@ interface AppState {
   setCustomization: (key: 'color' | 'layout' | 'style', value: string) => void;
   setIsInternational: (value: boolean) => void;
   setCountry: (value: string) => void;
+  setUser: (user: User | null) => void;
+  setDemoMode: (enabled: boolean) => void;
+  logout: () => void;
   reset: () => void;
 }
 
@@ -79,6 +92,9 @@ const initialState = {
   },
   isInternational: false,
   country: '',
+  user: null,
+  isLoggedIn: false,
+  demoMode: false,
 };
 
 export const useStore = create<AppState>((set) => ({
@@ -115,5 +131,8 @@ export const useStore = create<AppState>((set) => ({
   })),
   setIsInternational: (value) => set({ isInternational: value }),
   setCountry: (value) => set({ country: value }),
+  setUser: (user) => set({ user, isLoggedIn: !!user }),
+  setDemoMode: (enabled) => set({ demoMode: enabled, isLoggedIn: enabled ? false : undefined as any }),
+  logout: () => set({ user: null, isLoggedIn: false, demoMode: false }),
   reset: () => set(initialState),
 }));

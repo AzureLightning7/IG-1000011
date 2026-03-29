@@ -1,33 +1,81 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, Phone, ArrowLeft, Mail as MailIcon } from 'lucide-react';
+import { Mail, Phone, ArrowLeft, Eye, EyeOff, Chrome, Mail as MailIcon } from 'lucide-react';
+import { useStore } from '../store/useStore';
+import { toast } from 'sonner';
 
 export default function Login() {
   const navigate = useNavigate();
+  const { setUser, setDemoMode } = useStore();
+  const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [loginType, setLoginType] = useState<'china' | 'international'>('china');
   const [chinaType, setChinaType] = useState<'phone' | 'email'>('phone');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Signup fields
+  const [name, setName] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const handleLogin = () => {
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
+      setUser({
+        id: '1',
+        name: identifier.split('@')[0] || 'User',
+        email: chinaType === 'email' ? identifier : undefined,
+        phone: chinaType === 'phone' ? identifier : undefined,
+      });
+      toast.success('Successfully signed in!');
       navigate('/quiz');
     }, 1500);
+  };
+
+  const handleSignup = () => {
+    if (password !== confirmPassword) {
+      toast.error('Passwords do not match!');
+      return;
+    }
+    if (!name || !identifier || !password) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      setUser({
+        id: '1',
+        name,
+        email: chinaType === 'email' ? identifier : undefined,
+        phone: chinaType === 'phone' ? identifier : undefined,
+      });
+      toast.success('Account created successfully!');
+      navigate('/quiz');
+    }, 1500);
+  };
+
+  const handleDemoMode = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      setDemoMode(true);
+      toast.info('Entering Demo Mode - limited features');
+      navigate('/quiz');
+    }, 1000);
   };
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-6">
       <button
-        onClick={() => navigate('/')}
+        onClick={() => navigate('/quiz')}
         className="fixed top-6 left-6 flex items-center gap-2 text-zinc-400 hover:text-white transition-colors"
       >
         <ArrowLeft className="w-5 h-5" />
-        Back
+        Back to Quiz
       </button>
 
       <motion.div
@@ -40,8 +88,12 @@ export default function Login() {
         </div>
 
         <div className="bg-zinc-900/50 border border-zinc-800 rounded-3xl p-8">
-          <h1 className="text-2xl font-bold text-center mb-2">Welcome Back</h1>
-          <p className="text-zinc-500 text-center mb-8">Sign in to continue</p>
+          <h1 className="text-2xl font-bold text-center mb-2">
+            {mode === 'login' ? 'Welcome Back' : 'Create Account'}
+          </h1>
+          <p className="text-zinc-500 text-center mb-8">
+            {mode === 'login' ? 'Sign in to continue' : 'Join thousands of students'}
+          </p>
 
           <div className="flex bg-zinc-800 rounded-xl p-1 mb-6">
             <button
@@ -68,6 +120,18 @@ export default function Login() {
 
           {loginType === 'china' ? (
             <div className="space-y-4">
+              {mode === 'signup' && (
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Your name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white focus:outline-none focus:border-teal-500"
+                  />
+                </div>
+              )}
+
               <div className="flex gap-2 mb-4">
                 <button
                   onClick={() => setChinaType('phone')}
@@ -103,7 +167,7 @@ export default function Login() {
                 />
               </div>
 
-              <div className="relative">
+              <div>
                 <input
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Password"
@@ -113,18 +177,46 @@ export default function Login() {
                 />
               </div>
 
+              {mode === 'signup' && (
+                <div>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Confirm password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white focus:outline-none focus:border-teal-500"
+                  />
+                </div>
+              )}
+
               <button
-                onClick={handleLogin}
-                disabled={isLoading || !identifier || !password}
+                onClick={mode === 'login' ? handleLogin : handleSignup}
+                disabled={isLoading || !identifier || !password || (mode === 'signup' && (!name || !confirmPassword))}
                 className="w-full py-3 bg-teal-500 text-black rounded-xl font-bold hover:bg-teal-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Signing in...' : 'Sign In'}
+                {isLoading ? 'Please wait...' : (mode === 'login' ? 'Sign In' : 'Create Account')}
               </button>
 
-              <div className="flex justify-between text-sm">
-                <button className="text-teal-400 hover:text-teal-300">Forgot password?</button>
-                <button className="text-teal-400 hover:text-teal-300">Register</button>
-              </div>
+              {mode === 'login' ? (
+                <div className="flex justify-between text-sm">
+                  <button className="text-teal-400 hover:text-teal-300">Forgot password?</button>
+                  <button 
+                    onClick={() => setMode('signup')}
+                    className="text-teal-400 hover:text-teal-300"
+                  >
+                    Register
+                  </button>
+                </div>
+              ) : (
+                <div className="flex justify-end text-sm">
+                  <button 
+                    onClick={() => setMode('login')}
+                    className="text-teal-400 hover:text-teal-300"
+                  >
+                    Already have an account? Sign in
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
@@ -152,19 +244,37 @@ export default function Login() {
                 </svg>
                 Continue with Microsoft
               </button>
+              
+              <div className="relative py-2">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-zinc-700"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-zinc-900 text-zinc-500">or</span>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setMode('signup')}
+                className="w-full py-3 border border-zinc-700 text-white rounded-xl font-bold hover:bg-zinc-800 transition-all"
+              >
+                Create Account
+              </button>
             </div>
           )}
         </div>
 
-        <p className="text-zinc-500 text-sm text-center mt-6">
-          Don't have an account?{' '}
+        {/* Demo Mode */}
+        <div className="mt-6 text-center">
+          <span className="text-zinc-500">or </span>
           <button 
-            onClick={() => navigate('/quiz')}
-            className="text-teal-400 hover:text-teal-300"
+            onClick={handleDemoMode}
+            className="text-teal-400 hover:text-teal-300 font-medium"
           >
-            Sign up
+            Try Demo Mode
           </button>
-        </p>
+          <span className="text-zinc-500"> to explore without signing in</span>
+        </div>
       </motion.div>
     </div>
   );
