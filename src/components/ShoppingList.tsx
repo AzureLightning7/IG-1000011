@@ -28,8 +28,34 @@ const parsePrice = (priceRange: string): number => {
   return parseInt(match[0].replace('$', ''), 10);
 };
 
+const getShoppingLinks = (product: Product, isInternational: boolean) => {
+  if (isInternational) {
+    return [
+      {
+        label: 'Amazon',
+        url: `https://www.amazon.com/s?k=${encodeURIComponent(product.searchQuery)}`,
+      },
+      {
+        label: 'IKEA',
+        url: `https://www.ikea.com/us/en/search/?q=${encodeURIComponent(product.searchQuery)}`,
+      },
+    ];
+  } else {
+    return [
+      {
+        label: 'Taobao',
+        url: `https://s.taobao.com/search?q=${encodeURIComponent(product.searchQuery)}`,
+      },
+      {
+        label: 'Pinduoduo',
+        url: `https://mobile.pinduoduo.com/search?keyword=${encodeURIComponent(product.searchQuery)}`,
+      },
+    ];
+  }
+};
+
 const ShoppingList: React.FC<ShoppingListProps> = ({ products }) => {
-  const { addToCart, cartItems } = useStore();
+  const { addToCart, cartItems, isInternational } = useStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'price' | 'name' | 'category'>('name');
@@ -142,22 +168,26 @@ const ShoppingList: React.FC<ShoppingListProps> = ({ products }) => {
                 >
                   <ShoppingBag className="w-4 h-4" /> Add to Cart
                 </button>
-                <a
-                  href={`https://www.amazon.com/s?k=${encodeURIComponent(product.searchQuery)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl text-sm font-bold transition-all"
-                >
-                  <ShoppingBag className="w-4 h-4" /> Amazon
-                </a>
-                <a
-                  href={`https://www.ikea.com/us/en/search/?q=${encodeURIComponent(product.searchQuery)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 w-full py-3 border border-zinc-800 hover:border-zinc-700 text-zinc-400 rounded-xl text-sm font-bold transition-all"
-                >
-                  <ExternalLink className="w-4 h-4" /> IKEA
-                </a>
+                {getShoppingLinks(product, isInternational).map((link, linkIdx) => (
+                  <a
+                    key={linkIdx}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold transition-all ${
+                      linkIdx === 0 
+                        ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300'
+                        : 'border border-zinc-800 hover:border-zinc-700 text-zinc-400'
+                    }`}
+                  >
+                    {linkIdx === 0 ? (
+                      <ShoppingBag className="w-4 h-4" />
+                    ) : (
+                      <ExternalLink className="w-4 h-4" />
+                    )}
+                    {link.label}
+                  </a>
+                ))}
               </div>
             </div>
           ))}

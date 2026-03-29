@@ -35,11 +35,16 @@ JSON RULES:
   },
   // User prompts
   user: {
-    generateVibeGuide: (interests: string[], colorPalette: string, budget: number, isInternational: boolean, country: string, priority: string) => `Generate a dorm room vibe guide for a student with these preferences:
+    generateVibeGuide: (interests: string[], colorPalette: string, budget: number, isInternational: boolean, country: string, priority: string) => {
+      const studentType = isInternational && country?.trim() 
+        ? `International student from ${country.trim()}` 
+        : 'Domestic student';
+      
+      return `Generate a dorm room vibe guide for a student with these preferences:
 - Interests: ${interests.join(', ')}
 - Color palette: ${colorPalette}
 - Budget: $${budget}
-- Student type: ${isInternational ? 'International student from ' + country : 'Domestic student'}
+- Student type: ${studentType}
 - Priority: ${priority}
 
 Respond ONLY with this exact JSON structure:
@@ -59,7 +64,8 @@ Respond ONLY with this exact JSON structure:
   ]
 }
 
-Include 6-8 products that fit within the $${budget} total budget. Make product search queries specific enough to find the right items on Amazon.`
+Include 6-8 products that fit within the $${budget} total budget. Make product search queries specific enough to find the right items on Amazon.`;
+    },
   },
   // Image prompts
   image: {

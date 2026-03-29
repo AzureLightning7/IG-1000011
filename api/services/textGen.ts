@@ -70,6 +70,12 @@ const parseJsonFromModelContent = (content: unknown) => {
       repaired = repaired.replace(/,\s*}/g, '}');
       repaired = repaired.replace(/,\s*]/g, ']');
       
+      // Fix double quotes issue: ""value"" -> "value" (AI outputs like "$25-$35" incorrectly as ""$25-$35"")
+      // First, normalize multiple quotes to single
+      while (repaired.includes('""')) {
+        repaired = repaired.replace(/""+/g, '"');
+      }
+      
       // Fix missing commas between array elements
       repaired = repaired.replace(/}("|\s)*\{/g, '},{');
       
@@ -81,6 +87,63 @@ const parseJsonFromModelContent = (content: unknown) => {
         }
         return match;
       });
+
+      // Fix missing commas before property values - catch patterns like "value" { or "value" }
+      repaired = repaired.replace(/([a-zA-Z0-9"])\s*\{/g, '$1,');
+      repaired = repaired.replace(/"\s*\}\s*"\s*:/g, '"}],:');
+      
+      // Fix unescaped quotes inside string values - e.g., "soft " fleece blanket" -> "soft fleece blanket"
+      // This catches patterns where quotes appear inside what should be a string value
+      const fixNestedQuotes = (str: string): string => {
+        let result = '';
+        let i = 0;
+        while (i < str.length) {
+          const char = str[i];
+          const nextChar = str[i + 1];
+          
+          // Check for pattern: "value" text that includes unquoted quote before comma/brace
+          if (char === '"' && (nextChar === ',' || nextChar === '}' || nextChar === ']')) {
+            // This is an end quote, just add it
+            result += char;
+            i++;
+            continue;
+          }
+          
+          // Check for pattern starting with " and contains more " before the end
+          if (char === '"' && i < str.length - 1) {
+            // Find the matching end quote
+            let endQuoteIndex = -1;
+            let j = i + 1;
+            while (j < str.length) {
+              if (str[j] === '"' && str[j-1] !== '\\') {
+                // Check if next char suggests this is the real end
+                const following = str[j + 1];
+                if (following === ',' || following === '}' || following === ':' || following === ']') {
+                  endQuoteIndex = j;
+                  break;
+                }
+              }
+              j++;
+            }
+            
+            if (endQuoteIndex > i + 1) {
+              // Found a properly quoted string
+              result += str.slice(i, endQuoteIndex + 1);
+              i = endQuoteIndex + 1;
+              continue;
+            }
+          }
+          
+          result += char;
+          i++;
+        }
+        return result;
+      };
+      repaired = fixNestedQuotes(repaired);
+      
+      // Also fix cases where a property value has embedded unescaped quotes like:
+      // "searchQuery":"soft gray fleece" blanket 60x50 -> "searchQuery":"soft gray fleece blanket 60x50"
+      repaired = repaired.replace(/"([a-zA-Z]+)":"([^"]*)" ([a-zA-Z]+)/g, '"$1":"$2 $3"');
       
       const fixUnescapedQuotes = (str: string): string => {
         let result = '';

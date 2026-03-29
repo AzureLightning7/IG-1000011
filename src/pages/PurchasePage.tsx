@@ -100,19 +100,36 @@ const PurchasePage: React.FC = () => {
 
             {activeTab === 'marketplace' && (
               <div className="space-y-6">
-                <h3 className="text-xl font-bold">Marketplace Items</h3>
-                <p className="text-zinc-400">Discover unique items from our community marketplace</p>
+                <h3 className="text-xl font-bold">Campus Marketplace</h3>
+                <p className="text-zinc-400">Buy and sell items with other students on campus</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {/* Marketplace items would be loaded here */}
                   <div className="bg-zinc-800 rounded-2xl p-6 text-center">
                     <Package className="w-12 h-12 mx-auto text-teal-400 mb-4" />
-                    <h4 className="font-bold mb-2">Marketplace Coming Soon</h4>
-                    <p className="text-zinc-500 text-sm">Browse and buy unique items from other students</p>
+                    <h4 className="font-bold mb-2">Buy From Students</h4>
+                    <p className="text-zinc-500 text-sm mb-4">Browse unique items from other students</p>
+                    <button 
+                      onClick={() => {
+                        const marketplaceBtn = document.querySelector('[data-marketplace-btn]') as HTMLButtonElement;
+                        if (marketplaceBtn) marketplaceBtn.click();
+                      }}
+                      className="px-4 py-2 bg-teal-500 text-black rounded-lg font-bold text-sm hover:bg-teal-400"
+                    >
+                      Open Marketplace
+                    </button>
                   </div>
                   <div className="bg-zinc-800 rounded-2xl p-6 text-center">
                     <Package className="w-12 h-12 mx-auto text-teal-400 mb-4" />
                     <h4 className="font-bold mb-2">Sell Your Items</h4>
-                    <p className="text-zinc-500 text-sm">List your gently used dorm items for sale</p>
+                    <p className="text-zinc-500 text-sm mb-4">List your gently used dorm items for sale</p>
+                    <button 
+                      onClick={() => {
+                        const marketplaceBtn = document.querySelector('[data-marketplace-btn]') as HTMLButtonElement;
+                        if (marketplaceBtn) marketplaceBtn.click();
+                      }}
+                      className="px-4 py-2 bg-teal-500 text-black rounded-lg font-bold text-sm hover:bg-teal-400"
+                    >
+                      Sell Item
+                    </button>
                   </div>
                   <div className="bg-zinc-800 rounded-2xl p-6 text-center">
                     <Package className="w-12 h-12 mx-auto text-teal-400 mb-4" />
@@ -120,6 +137,9 @@ const PurchasePage: React.FC = () => {
                     <p className="text-zinc-500 text-sm">Easy pickup options on campus</p>
                   </div>
                 </div>
+                <p className="text-zinc-500 text-sm text-center">
+                  💡 Tip: Click the floating "Marketplace" button in the bottom right corner to browse & sell items!
+                </p>
               </div>
             )}
 
@@ -128,16 +148,33 @@ const PurchasePage: React.FC = () => {
                 <h3 className="text-xl font-bold">Freecycling</h3>
                 <p className="text-zinc-400">Find free items from students moving out</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {/* Freecycling items would be loaded here */}
                   <div className="bg-zinc-800 rounded-2xl p-6 text-center">
                     <Heart className="w-12 h-12 mx-auto text-teal-400 mb-4" />
-                    <h4 className="font-bold mb-2">Free Items</h4>
-                    <p className="text-zinc-500 text-sm">Browse items students are giving away</p>
+                    <h4 className="font-bold mb-2">Get Free Items</h4>
+                    <p className="text-zinc-500 text-sm mb-4">Browse items students are giving away</p>
+                    <button 
+                      onClick={() => {
+                        const marketplaceBtn = document.querySelector('[data-marketplace-btn]') as HTMLButtonElement;
+                        if (marketplaceBtn) marketplaceBtn.click();
+                      }}
+                      className="px-4 py-2 bg-green-500 text-black rounded-lg font-bold text-sm hover:bg-green-400"
+                    >
+                      Browse Free Items
+                    </button>
                   </div>
                   <div className="bg-zinc-800 rounded-2xl p-6 text-center">
                     <Heart className="w-12 h-12 mx-auto text-teal-400 mb-4" />
                     <h4 className="font-bold mb-2">Give Away</h4>
-                    <p className="text-zinc-500 text-sm">List items you no longer need</p>
+                    <p className="text-zinc-500 text-sm mb-4">List items you no longer need</p>
+                    <button 
+                      onClick={() => {
+                        const marketplaceBtn = document.querySelector('[data-marketplace-btn]') as HTMLButtonElement;
+                        if (marketplaceBtn) marketplaceBtn.click();
+                      }}
+                      className="px-4 py-2 bg-green-500 text-black rounded-lg font-bold text-sm hover:bg-green-400"
+                    >
+                      List for Free
+                    </button>
                   </div>
                   <div className="bg-zinc-800 rounded-2xl p-6 text-center">
                     <Heart className="w-12 h-12 mx-auto text-teal-400 mb-4" />
@@ -145,6 +182,9 @@ const PurchasePage: React.FC = () => {
                     <p className="text-zinc-500 text-sm">Reduce waste and help the environment</p>
                   </div>
                 </div>
+                <p className="text-zinc-500 text-sm text-center">
+                  💡 Tip: Click the floating "Marketplace" button in the bottom right corner, then switch to "Recycle (Free)" tab!
+                </p>
               </div>
             )}
           </div>

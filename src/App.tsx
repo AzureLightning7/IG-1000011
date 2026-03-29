@@ -4,6 +4,8 @@ import LoadingScreen from "./pages/LoadingScreen";
 import CustomizationPage from "./pages/CustomizationPage";
 import PurchasePage from "./pages/PurchasePage";
 import StageNavigation from "./components/StageNavigation";
+import Home from "./pages/Home";
+import Login from "./pages/Login";
 import { useState, useRef, useEffect } from "react";
 import { ShoppingBag, X, ArrowLeft, CreditCard, Truck, Check, Trash2, Package, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -502,6 +504,7 @@ function MarketplaceButton() {
     return (
       <button
         onClick={() => setIsOpen(true)}
+        data-marketplace-btn
         className="fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-2 bg-teal-500 text-white rounded-full font-medium hover:bg-teal-600 transition-colors shadow-lg"
       >
         <ShoppingBag className="w-5 h-5" />
@@ -706,9 +709,11 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white selection:bg-teal-500/30">
       <MarketplaceButton />
-      {location.pathname !== '/' && location.pathname !== '/loading' && <StageNavigation />}
+      {location.pathname !== '/' && location.pathname !== '/login' && location.pathname !== '/loading' && location.pathname !== '/quiz' && <StageNavigation />}
       <Routes>
-        <Route path="/" element={<VibeQuiz />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/quiz" element={<VibeQuiz />} />
         <Route path="/loading" element={<LoadingScreen />} />
         <Route path="/customization" element={<CustomizationPage />} />
         <Route path="/purchase" element={<PurchasePage />} />

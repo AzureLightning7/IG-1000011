@@ -40,6 +40,8 @@ interface AppState {
     layout: string;
     style: string;
   };
+  isInternational: boolean;
+  country: string;
   setQuizData: (data: QuizData) => void;
   setGeneratedContent: (content: GeneratedContent) => void;
   setMediaContent: (media: Partial<MediaContent>) => void;
@@ -51,6 +53,8 @@ interface AppState {
   removeFromCart: (id: string) => void;
   addSellerItem: (item: SellerItem) => void;
   setCustomization: (key: 'color' | 'layout' | 'style', value: string) => void;
+  setIsInternational: (value: boolean) => void;
+  setCountry: (value: string) => void;
   reset: () => void;
 }
 
@@ -73,11 +77,13 @@ const initialState = {
     layout: 'Standard Layout',
     style: 'Modern Minimalist',
   },
+  isInternational: false,
+  country: '',
 };
 
 export const useStore = create<AppState>((set) => ({
   ...initialState,
-  setQuizData: (data) => set({ quizData: data }),
+  setQuizData: (data) => set({ quizData: data, isInternational: data.isInternational, country: data.country || '' }),
   setGeneratedContent: (content) => set({ generatedContent: content }),
   setMediaContent: (media) => set((state) => ({ 
     mediaContent: { ...state.mediaContent, ...media } 
@@ -107,5 +113,7 @@ export const useStore = create<AppState>((set) => ({
       [key]: value
     }
   })),
+  setIsInternational: (value) => set({ isInternational: value }),
+  setCountry: (value) => set({ country: value }),
   reset: () => set(initialState),
 }));
