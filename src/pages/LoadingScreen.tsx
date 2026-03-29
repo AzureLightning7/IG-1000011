@@ -8,12 +8,19 @@ const LoadingScreen: React.FC = () => {
   const navigate = useNavigate();
   const { quizData, setGeneratedContent, setMediaContent, setProgress, progress, setIsGenerating } = useStore();
   const eventSourceRef = useRef<EventSource | null>(null);
+  const hasStartedGeneration = useRef(false);
 
   useEffect(() => {
     if (!quizData) {
       navigate('/');
       return;
     }
+
+    // Prevent duplicate generation due to React StrictMode
+    if (hasStartedGeneration.current) {
+      return;
+    }
+    hasStartedGeneration.current = true;
 
     setIsGenerating(true);
     
@@ -74,7 +81,7 @@ const LoadingScreen: React.FC = () => {
         setMediaContent({ imageUrl: data.url });
       } else if (step === 'Complete' && status === 'completed') {
         setIsGenerating(false);
-        setTimeout(() => navigate('/results'), 1500);
+        setTimeout(() => navigate('/customization'), 1500);
       }
     };
 

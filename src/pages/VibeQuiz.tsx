@@ -1,8 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
-import { motion } from 'framer-motion';
-import { Sparkles, ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Sparkles, ChevronDown, Search, MapPin } from 'lucide-react';
+
+const COUNTRIES = [
+  'Afghanistan', 'Albania', 'Algeria', 'Argentina', 'Australia', 'Austria', 'Bangladesh', 'Belgium', 'Brazil', 'Canada',
+  'Chile', 'China', 'Colombia', 'Czech Republic', 'Denmark', 'Egypt', 'Ethiopia', 'Finland', 'France', 'Germany',
+  'Ghana', 'Greece', 'Hong Kong', 'Hungary', 'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland', 'Israel',
+  'Italy', 'Japan', 'Jordan', 'Kenya', 'South Korea', 'Kuwait', 'Lebanon', 'Malaysia', 'Mexico', 'Morocco',
+  'Nepal', 'Netherlands', 'New Zealand', 'Nigeria', 'Norway', 'Pakistan', 'Peru', 'Philippines', 'Poland', 'Portugal',
+  'Qatar', 'Romania', 'Russia', 'Saudi Arabia', 'Singapore', 'South Africa', 'Spain', 'Sri Lanka', 'Sweden', 'Switzerland',
+  'Taiwan', 'Thailand', 'Turkey', 'UAE', 'Uganda', 'Ukraine', 'United Kingdom', 'United States', 'Venezuela', 'Vietnam'
+];
 
 const INTERESTS = [
   'Anime', 'Gaming', 'Music', 'Sports', 'Plants', 'Art', 'Photography', 
@@ -45,6 +55,68 @@ const PERSONALITY_TRAITS = [
   { id: 'extrovert', label: 'Extrovert', description: 'Energy comes from social time' },
   { id: 'ambivert', label: 'Ambivert', description: 'I need both solitude and company' },
 ];
+
+const CountrySelector: React.FC<{
+  value: string;
+  onChange: (value: string) => void;
+}> = ({ value, onChange }) => {
+  const [search, setSearch] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const filteredCountries = COUNTRIES.filter(country =>
+    country.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="relative w-full max-w-md">
+      <div className="relative">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+        <input
+          type="text"
+          placeholder="Search for your country..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setShowDropdown(true);
+          }}
+          onFocus={() => setShowDropdown(true)}
+          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-12 pr-6 py-4 focus:outline-none focus:border-teal-500 text-white"
+        />
+      </div>
+      <AnimatePresence>
+        {showDropdown && filteredCountries.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="absolute z-50 w-full mt-2 bg-zinc-900 border border-zinc-800 rounded-xl max-h-60 overflow-y-auto shadow-xl"
+          >
+            {filteredCountries.map((country) => (
+              <button
+                key={country}
+                onClick={() => {
+                  onChange(country);
+                  setSearch(country);
+                  setShowDropdown(false);
+                }}
+                className="w-full px-6 py-3 text-left text-zinc-300 hover:bg-zinc-800 hover:text-teal-400 flex items-center gap-3"
+              >
+                <MapPin className="w-4 h-4" />
+                {country}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {value && !showDropdown && (
+        <div className="mt-3 flex items-center gap-2 text-zinc-400">
+          <MapPin className="w-4 h-4 text-teal-400" />
+          <span>Selected: <span className="text-teal-400 font-medium">{value}</span></span>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const VibeQuiz: React.FC = () => {
   const navigate = useNavigate();
@@ -218,7 +290,7 @@ const VibeQuiz: React.FC = () => {
         {sections.map((section, index) => (
           <section 
             key={index} 
-            ref={(el) => { sectionRefs.current[index] = el; }}
+            ref={(el) => { sectionRefs.current[index] = el as HTMLDivElement; }}
             className="h-screen snap-start flex flex-col items-center justify-center p-6 quiz-section"
           >
             <div className="max-w-3xl w-full">
@@ -376,8 +448,8 @@ const VibeQuiz: React.FC = () => {
                 )}
 
                 {index === 7 && (
-                  <div className="space-y-6">
-                    <div className="flex gap-4 justify-center">
+                  <div className="space-y-6 flex flex-col items-center">
+                    <div className="flex gap-4">
                       <button
                         onClick={() => setFormData({ ...formData, isInternational: true })}
                         className={`px-8 py-4 rounded-xl border transition-all ${
@@ -399,15 +471,9 @@ const VibeQuiz: React.FC = () => {
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
-                        className="flex justify-center"
+                        className="w-full max-w-md mt-4 relative"
                       >
-                        <input
-                          type="text"
-                          placeholder="Where are you coming from?"
-                          value={formData.country}
-                          onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                          className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-xl px-6 py-4 focus:outline-none focus:border-teal-500 text-white"
-                        />
+                        <CountrySelector value={formData.country} onChange={(country) => setFormData({ ...formData, country })} />
                       </motion.div>
                     )}
                   </div>
