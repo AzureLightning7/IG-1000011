@@ -23,7 +23,15 @@ NARRATION RULES:
 - End with something encouraging
 
 RESPONSE FORMAT:
-You MUST respond with raw JSON only. No markdown. No backticks. No text before or after the JSON object. Do not wrap the response in a code block. The response must start with { and end with } — nothing else.`
+You MUST respond with valid, well-formed JSON only. No markdown. No backticks. No text before or after the JSON object. Do not wrap the response in a code block. The response must start with { and end with } — nothing else.
+
+JSON RULES:
+- All strings must be properly escaped
+- All keys and string values must be enclosed in double quotes
+- Arrays must be properly formatted with commas between elements
+- Objects must be properly formatted with commas between key-value pairs
+- No trailing commas allowed
+- Ensure the JSON is syntactically correct and can be parsed by standard JSON parsers`
   },
   // User prompts
   user: {
@@ -55,6 +63,6 @@ Include 6-8 products that fit within the $${budget} total budget. Make product s
   },
   // Image prompts
   image: {
-    customization: (basePrompt: string, customizationPrompt: string) => `${basePrompt}\n\nCustomization request: ${customizationPrompt}\n\nIMPORTANT: The original image is of a room. Preserve the original room layout, furniture placement, and overall style while implementing the specific customization request. Your output image must be at least 90% similar to the original image.`
+    customization: (basePrompt: string, customizationPrompt: string) => `Based on the reference image, maintain the exact same room layout, furniture arrangement, color scheme, lighting, and overall aesthetic. Keep every existing element unchanged. Additionally, add the following: ${customizationPrompt}. The additions should blend naturally with the existing room style and color palette. Do not remove, rearrange, or alter any existing items.\n\nOriginal room description for context: ${basePrompt}`
   }
 };
