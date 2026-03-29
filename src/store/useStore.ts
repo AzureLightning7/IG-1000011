@@ -35,6 +35,11 @@ interface AppState {
   };
   cartItems: CartItem[];
   sellerItems: SellerItem[];
+  customization: {
+    color: string;
+    layout: string;
+    style: string;
+  };
   setQuizData: (data: QuizData) => void;
   setGeneratedContent: (content: GeneratedContent) => void;
   setMediaContent: (media: Partial<MediaContent>) => void;
@@ -45,6 +50,7 @@ interface AppState {
   addToCart: (item: CartItem) => void;
   removeFromCart: (id: string) => void;
   addSellerItem: (item: SellerItem) => void;
+  setCustomization: (key: 'color' | 'layout' | 'style', value: string) => void;
   reset: () => void;
 }
 
@@ -62,6 +68,11 @@ const initialState = {
   },
   cartItems: [],
   sellerItems: [],
+  customization: {
+    color: '#2dd4bf',
+    layout: 'Standard Layout',
+    style: 'Modern Minimalist',
+  },
 };
 
 export const useStore = create<AppState>((set) => ({
@@ -89,6 +100,12 @@ export const useStore = create<AppState>((set) => ({
   })),
   addSellerItem: (item) => set((state) => ({ 
     sellerItems: [...state.sellerItems, item] 
+  })),
+  setCustomization: (key, value) => set((state) => ({
+    customization: {
+      ...state.customization,
+      [key]: value
+    }
   })),
   reset: () => set(initialState),
 }));
