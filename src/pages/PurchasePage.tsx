@@ -53,7 +53,7 @@ const PurchasePage: React.FC = () => {
         </motion.div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 space-y-24">
+      <main className="max-w-7xl mx-auto px-6">
         {/* 3D Room Display or Shopping Tabs */}
         {showRoomView ? (
           <RoomShoppingDisplay
@@ -63,6 +63,7 @@ const PurchasePage: React.FC = () => {
             onBack={() => setShowRoomView(false)}
           />
         ) : (
+          <div className="space-y-24">
           <section>
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-2xl font-bold flex items-center gap-2">🛒 Shopping Options</h2>
@@ -205,6 +206,7 @@ const PurchasePage: React.FC = () => {
               )}
             </div>
           </section>
+          </div>
         )}
 
         {/* Cart Summary */}
