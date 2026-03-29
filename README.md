@@ -2,6 +2,9 @@
 
 **DormVibe** is an AI-powered dorm room styling assistant for college students. By taking a simple "vibe quiz," students can generate a complete room design package including a mood board and an audio walkthrough—all powered by the MiniMax AI API.
 
+## Vercel Link:
+https://ig-1000011.vercel.app/
+
 ## 🚀 Getting Started
 
 ### Prerequisites
