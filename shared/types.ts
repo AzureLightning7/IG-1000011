@@ -3,6 +3,10 @@ export interface Product {
   category: 'Lighting' | 'Bedding' | 'Desk' | 'Wall Decor' | 'Storage' | 'Plants' | 'Textiles' | 'Tech';
   priceRange: string;
   searchQuery: string;
+  hotspot?: {
+    x: number;  // 0-100, percentage from left
+    y: number;  // 0-100, percentage from top
+  };
 }
 
 export interface GeneratedContent {
