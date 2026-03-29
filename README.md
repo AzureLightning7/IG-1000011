@@ -73,3 +73,69 @@ The frontend is configured to proxy API requests to the backend automatically.
 ## 📜 License
 
 This project is for educational purposes as part of a Trae Solo Builder session.
+
+## 👥 Judges' Guide
+
+### Quick Start for Hackathon Evaluation
+
+1. **Clone the repository**:
+   ```bash
+   git clone <repository-url>
+   cd IG-1000011
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**:
+   - Create a `.env` file in the root directory
+   - Add your MiniMax API key (provided separately to judges):
+     ```env
+     MINIMAX_API_KEY=your_minimax_api_key_here
+     MINIMAX_BASE_URL=https://api.minimaxi.com/v1
+     MINIMAX_TTS_MODEL=speech-2.8-hd
+     MINIMAX_TTS_VOICE_ID=English_expressive_narrator
+     ```
+
+4. **Run the application**:
+   ```bash
+   npm run dev
+   ```
+
+5. **Access the app**:
+   - Frontend: Open your browser to the URL printed in the terminal (usually `http://localhost:5173/`)
+   - Backend: Running at `http://localhost:3001`
+
+### Testing the Features
+
+1. **Vibe Quiz**:
+   - Complete the interactive quiz with your style preferences
+   - Observe the real-time loading screen as AI processes your inputs
+
+2. **Mood Board**:
+   - View the generated mood board with AI-created room designs
+   - Note the quality and relevance to your quiz answers
+
+3. **Audio Walkthrough**:
+   - Listen to the AI-generated narration explaining your room setup
+   - Check for clear audio quality and relevant content
+
+4. **Shopping List**:
+   - Review the curated product links to Amazon and IKEA
+   - Verify that products match the style and budget specified
+
+### Technical Evaluation Points
+
+- **Performance**: App responsiveness and loading times
+- **AI Integration**: Quality of generated content (images, audio, recommendations)
+- **User Experience**: Intuitive interface and smooth navigation
+- **Technical Implementation**: Code structure and architecture
+- **Innovation**: Unique approach to dorm room styling
+
+### Troubleshooting
+
+- If you encounter API errors, ensure your MiniMax API key is correctly set in the `.env` file
+- If the frontend doesn't connect to the backend, check that both services are running (frontend on port 5173, backend on port 3001)
+- For any other issues, please contact the development team

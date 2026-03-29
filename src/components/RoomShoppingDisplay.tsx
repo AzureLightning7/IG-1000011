@@ -139,7 +139,13 @@ const RoomShoppingDisplay: React.FC<RoomShoppingDisplayProps> = ({ roomImageUrl,
           }}
         >
           <div className="room-image">
-            <img src={roomImageUrl} alt={vibeName} />
+            {roomImageUrl ? (
+              <img src={roomImageUrl} alt={vibeName} />
+            ) : (
+              <div className="flex items-center justify-center h-96 bg-zinc-800 rounded-16">
+                <p className="text-zinc-500">No room image available</p>
+              </div>
+            )}
             {processedProducts.map((product, index) => (
               <HotspotMarker
                 key={index}
